@@ -1,0 +1,37 @@
+name: Release
+on:
+  push:
+    branches: # TODO: only leave master
+      - feature/automated-releases
+      - master
+
+jobs:
+  build:
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v3
+
+      - name: Build application
+        run: |
+          bash tools/build.sh -f unleashed
+          bash tools/build.sh
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.0
+        with: # TODO: only leave master
+          release_branches: master,main,feature/automated-release
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+          artifacts: "dist/**"
