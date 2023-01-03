@@ -287,19 +287,15 @@ int32_t flipp_pomodoro_main(void* p) {
             continue;
         };
 
-        if(is_timer_tick(action)) {
-            if(flipp_pomodoro__is_stage_expired(&state)) {
-                if(state.stage == Work) {
-                    // REGISTER a deed on work stage complete to get an acheivement
-                    DOLPHIN_DEED(DolphinDeedPluginGameWin);
-                };
-
-                flipp_pomodoro__toggle_stage(&state);
-
-                
-
-                notification_message(notification_app, stage_start_notification_sequence_map[state.stage]);
+        if(is_timer_tick(action) && flipp_pomodoro__is_stage_expired(&state)) {
+            if(state.stage == Work) {
+                // REGISTER a deed on work stage complete to get an acheivement
+                DOLPHIN_DEED(DolphinDeedPluginGameWin);
             };
+
+            flipp_pomodoro__toggle_stage(&state);
+
+            notification_message(notification_app, stage_start_notification_sequence_map[state.stage]);
         }
 
         if(is_button_right_pressed(action)) {
