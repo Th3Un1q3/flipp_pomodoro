@@ -37,8 +37,6 @@ api_version=$(awk -F',' 'NR == 2 {print $3}' firmware/targets/f7/api_symbols.csv
 
 app_suffix="${build_mode}_${api_version}"
 
-echo "$concatenated_string"  # Outputs "hello world"
-
 export FBT_NO_SYNC=1
 
 rm -rf applications_user/$application_name

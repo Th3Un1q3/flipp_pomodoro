@@ -102,6 +102,7 @@
         "view_port.h": "c",
         "assets_icons.h": "c",
         "flipp_pomodoro_app_i.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "notifications.h": "c"
     }
 }
