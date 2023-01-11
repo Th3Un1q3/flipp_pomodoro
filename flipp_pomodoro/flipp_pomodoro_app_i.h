@@ -8,6 +8,9 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
+#include <gui/view_stack.h>
+#include <gui/view_dispatcher.h>
+#include <gui/scene_manager.h>
 #include <gui/elements.h>
 #include <dolphin/dolphin.h>
 #include <input/input.h>
@@ -16,6 +19,8 @@
 #include "helpers/time.h"
 #include "helpers/notifications.h"
 #include "modules/flipp_pomodoro.h"
+#include "flipp_pomodoro_app.h"
+#include "scenes/flipp_pomodoro_scene.h"
 
 // Auto-compiled icons
 #include "flipp_pomodoro_icons.h"
