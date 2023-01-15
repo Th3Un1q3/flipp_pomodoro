@@ -18,7 +18,7 @@ typedef struct {
 /// @brief Generates initial state
 /// @param state - pointer to the state of pomorodo.
 /// @returns A new pre-populated state for pomodoro timer
-FlippPomodoroState flipp_pomodoro__new();
+FlippPomodoroState* flipp_pomodoro__new();
 
 /// @brief Destroys state of timer and it's dependencies
 void flipp_pomodoro__destroy(FlippPomodoroState* state);

@@ -56,8 +56,10 @@ bool flipp_pomodoro__is_stage_expired(FlippPomodoroState* state) {
     return (time_now() - seamless_change_span_seconds) >= expired_by;
 }
 
-FlippPomodoroState flipp_pomodoro__new() {
+FlippPomodoroState* flipp_pomodoro__new() {
+    FlippPomodoroState* state = malloc(sizeof(FlippPomodoroState));
     const uint32_t now = time_now();
-    const FlippPomodoroState new_state = {.stage=default_stage, .started_at_timestamp=now};
-    return new_state;
+    state->started_at_timestamp=now;
+    state->stage=default_stage;
+    return state;
 }
