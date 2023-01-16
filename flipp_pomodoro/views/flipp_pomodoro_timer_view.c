@@ -11,6 +11,8 @@
 
 struct FlippPomodoroTimerView {
     View* view;
+    FlippPomodoroTimerViewInputCb right_cb;
+    void* right_cb_ctx;
 };
 
 typedef struct {
@@ -42,10 +44,12 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas* canvas, void* _model
 
     canvas_draw_icon(canvas, 0, 0, stage_background_image[model->state->stage]);
 
+    const uint8_t right_border_margin = 1;
+
     // Countdown section
     const uint8_t countdown_box_height = canvas_height(canvas)*0.4;
     const uint8_t countdown_box_width = canvas_width(canvas)*0.5;
-    const uint8_t countdown_box_x = canvas_width(canvas) - countdown_box_width - 2;
+    const uint8_t countdown_box_x = canvas_width(canvas) - countdown_box_width - right_border_margin;
     const uint8_t countdown_box_y = 0;
 
     elements_bold_rounded_frame(canvas,
@@ -76,11 +80,23 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas* canvas, void* _model
     furi_string_free(timer_string);
 };
 
-bool flipp_pomodoro_view_timer_input_callback(InputEvent* event, void* context) {
-    FURI_LOG_I(TAG, "flipp_pomodoro_view_timer_input_callback:{key:%d}", event->key);
-    furi_assert(context);
-    // TODO: attach controls and emit custom events on dispatch
-    return true;
+bool flipp_pomodoro_view_timer_input_callback(InputEvent* event, void* ctx) {
+    furi_assert(ctx);
+    furi_assert(event);
+    FlippPomodoroTimerView* timer = ctx;
+
+    const bool should_trigger_right_event_cb = (event->type==InputTypePress) &&
+        (event->key==InputKeyRight) &&
+        (timer->right_cb != NULL);
+
+    if(should_trigger_right_event_cb) {
+        furi_assert(timer->right_cb);
+        furi_assert(timer->right_cb_ctx);
+        timer->right_cb(timer->right_cb_ctx);
+        return true;
+    };
+
+    return false;
 };
 
 View* flipp_pomodoro_view_timer_get_view(FlippPomodoroTimerView* timer) {
@@ -88,19 +104,25 @@ View* flipp_pomodoro_view_timer_get_view(FlippPomodoroTimerView* timer) {
     return timer->view;
 };
 
-FlippPomodoroTimerView* flipp_pomodoro_view_timer_alloc(void* ctx) {
-    furi_assert(ctx);
-    FlippPomodoroApp* app = ctx;
+FlippPomodoroTimerView* flipp_pomodoro_view_timer_alloc() {
     FURI_LOG_I(TAG, "flipp_pomodoro_view_timer_alloc");
     FlippPomodoroTimerView* timer = malloc(sizeof(FlippPomodoroTimerView));
     timer->view = view_alloc();
 
+
     view_allocate_model(timer->view, ViewModelTypeLockFree, sizeof(FlippPomodoroTimerViewModel));
-    view_set_context(timer->view, app);
+    view_set_context(flipp_pomodoro_view_timer_get_view(timer), timer);
     view_set_draw_callback(timer->view, flipp_pomodoro_view_timer_draw_callback);
     view_set_input_callback(timer->view, flipp_pomodoro_view_timer_input_callback);
 
     return timer;
+};
+
+void flipp_pomodoro_view_timer_set_on_right_cb(FlippPomodoroTimerView* timer, FlippPomodoroTimerViewInputCb right_cb, void* right_cb_ctx) {
+    furi_assert(right_cb);
+    furi_assert(right_cb_ctx);
+    timer->right_cb = right_cb;
+    timer->right_cb_ctx = right_cb_ctx;
 };
 
 
