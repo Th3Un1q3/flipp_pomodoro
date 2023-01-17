@@ -13,10 +13,9 @@
 typedef enum
 {
     // Reserve first 100 events for button types and indexes, starting from 0
-    FlippPomodoroAppCustomEventTogglePomodoroManual = 100,
-    FlippPomodoroAppCustomEventTogglePomodoroNatural, // By expiration
+    FlippPomodoroAppCustomEventStageSkip = 100,
+    FlippPomodoroAppCustomEventStageComplete, // By Expiration
     FlippPomodoroAppCustomEventTimerTick,
-    RpcDebugAppCustomEventRpcDataExchange,
 } FlippPomodoroAppCustomEvent;
 
 typedef struct
@@ -27,7 +26,6 @@ typedef struct
     NotificationApp *notification_app;
     FlippPomodoroTimerView *timer_view;
     FlippPomodoroState *state;
-    ViewPort *view_port;
 } FlippPomodoroApp;
 
 typedef enum

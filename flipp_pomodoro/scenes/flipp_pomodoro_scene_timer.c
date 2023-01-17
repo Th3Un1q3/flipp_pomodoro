@@ -20,7 +20,7 @@ void flipp_pomodoro_scene_timer_on_next_stage(void *ctx)
 
     view_dispatcher_send_custom_event(
         app->view_dispatcher,
-        FlippPomodoroAppCustomEventTogglePomodoroManual);
+        FlippPomodoroAppCustomEventStageSkip);
 };
 
 void flipp_pomodoro_scene_timer_on_enter(void *context)
@@ -45,7 +45,7 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
     {
         view_dispatcher_send_custom_event(
             app->view_dispatcher,
-            FlippPomodoroAppCustomEventTogglePomodoroNatural);
+            FlippPomodoroAppCustomEventStageComplete);
     }
 };
 

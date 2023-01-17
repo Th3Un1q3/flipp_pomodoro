@@ -1,4 +1,3 @@
-#include "helpers/debug.h"
 #include "flipp_pomodoro_app_i.h"
 
 enum
@@ -29,10 +28,10 @@ static bool flipp_pomodoro_app_custom_event_callback(void *ctx, uint32_t event)
 
     switch (event)
     {
-    case FlippPomodoroAppCustomEventTogglePomodoroManual:
+    case FlippPomodoroAppCustomEventStageSkip:
         flipp_pomodoro__toggle_stage(app->state);
         return CustomEventConsumed;
-    case FlippPomodoroAppCustomEventTogglePomodoroNatural:
+    case FlippPomodoroAppCustomEventStageComplete:
         if (app->state->stage == Work)
         {
             // REGISTER a deed on work stage complete to get an acheivement
@@ -50,7 +49,6 @@ static bool flipp_pomodoro_app_custom_event_callback(void *ctx, uint32_t event)
 
 FlippPomodoroApp *flipp_pomodoro_app_alloc()
 {
-    //     // TODO: add free method
     FlippPomodoroApp *app = malloc(sizeof(FlippPomodoroApp));
     app->state = flipp_pomodoro__new();
 
@@ -93,7 +91,6 @@ void flipp_pomodoro_app_free(FlippPomodoroApp *app)
 int32_t flipp_pomodoro_app(void *p)
 {
     UNUSED(p);
-    FURI_LOG_E(TAG, "App starting...");
     FlippPomodoroApp *app = flipp_pomodoro_app_alloc();
 
     view_dispatcher_run(app->view_dispatcher);
