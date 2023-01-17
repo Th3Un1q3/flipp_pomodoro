@@ -118,6 +118,7 @@
         "view_dispatcher.h": "c",
         "flipp_pomodoro_timer_view.h": "c",
         "log.h": "c",
-        "mutex.h": "c"
+        "mutex.h": "c",
+        "m-array.h": "c"
     }
 }
