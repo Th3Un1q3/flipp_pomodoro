@@ -3,21 +3,27 @@
 
 >Boost Your Productivity with the Pomodoro Timer for Flipper Zero! Don't let your flipper get bored, let him help you instead.
 
-* [Install](#install)
-* [Guide](#guide)
-    + [`Focus` Phase](#-focus--phase)
-    + [`Rest` Phase](#-rest--phase)
-* [Development](#development)
-    + [Current state and plans](#current-state-and-plans)
+---
+  * [Install](#install)
+  * [Guide](#guide)
+  * [Contributing](#contributing)
+  * [Development](#development)
+    + [Track](#track)
     + [Build and Package](#build-and-package)
 
 ## Install
+[![Total Downloads](https://img.shields.io/github/downloads/Th3Un1q3/flipp_pomodoro/total?style=for-the-badge)](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest)
 
-[DOWNLOAD application from releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest) and follow instructions there.
+Download from [releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest) and follow instructions there.
+
+[![Latest Release Date](https://img.shields.io/github/release-date/Th3Un1q3/flipp_pomodoro?label=Latest%20release%20&style=for-the-badge) ![Latest Release](https://img.shields.io/github/v/release/Th3Un1q3/flipp_pomodoro?label=Latest%20version&style=for-the-badge) ![GitHub release (latest by date)](https://img.shields.io/github/downloads/Th3Un1q3/flipp_pomodoro/latest/total?label=Latest%20downloaded&style=for-the-badge)](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest)
 
 ## Guide
+
 [About Pomodoro Technique](https://francescocirillo.com/products/the-pomodoro-technique)
+
 ### `Focus` Phase
+
 ![Working Screen](docs/working.png)
 
 Do the following:
@@ -48,32 +54,22 @@ Do the following:
 * Answer pending messages
 * Talk to a colleague
 
+## Contributing
+
+[![GitHub Discussions](https://img.shields.io/github/discussions/Th3Un1q3/flipp_pomodoro?style=for-the-badge)](https://github.com/Th3Un1q3/flipp_pomodoro/discussions)
+
+I welcome contributions to this project! If you're interested in helping out, here are a few ways to get started:
+- Join [discussions](https://github.com/Th3Un1q3/flipp_pomodoro/discussions) to ask questions and share ideas with other contributors.
+- If you've found a bug or have an idea for a new feature, please open an issue on [issue tracker](https://github.com/Th3Un1q3/flipp_pomodoro/issues). Before opening a new issue, please search the existing issues to see if someone has already reported the problem.
+- If you're ready to start contributing code, please [fork](https://github.com/Th3Un1q3/flipp_pomodoro/fork) this GitHub repository and submit a [pull request](https://github.com/Th3Un1q3/flipp_pomodoro/pulls).
+
 ## Development
 
-### Current state and plans
+![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/m/Th3Un1q3/flipp_pomodoro?style=for-the-badge)
 
-https://github.com/users/Th3Un1q3/projects/1
+### Track
+You can follow project development on the [project board](https://github.com/users/Th3Un1q3/projects/1).
 
-https://github.com/Th3Un1q3/flipp_pomodoro/issues
-
-https://github.com/Th3Un1q3/flipp_pomodoro/discussions
-
-At the moment following functionality implemented:
-
-* Generic pomodoro cycle with two stages (Work: 25 min and rest 5 minutes)
-* Automatic and manual phases switch
-* Notification(sound, vibration, backlight, led) on stage change.
-* Energy Effecient workflow
-* Increase flipper happines score when completing pomodoros
-
-Will do(if I've got time):
-* ~~Publish a .fap package to let anyone download and install the app.~~
-* ~~Configure CI pipeline for automatic releases~~
-* Stats on exit(how many pomodoros complete)
-* Background work or restore from last state
-* ~~Integration with passport to develop your flipper profile by completing pomodoros~~
-* Configuration of notifications
-* Blind mode(no timer updates, just background and notification) for more energy saving
 
 ###  Build and Package
 Build application
