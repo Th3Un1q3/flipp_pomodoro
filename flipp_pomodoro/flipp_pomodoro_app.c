@@ -32,14 +32,14 @@ static bool flipp_pomodoro_app_custom_event_callback(void *ctx, uint32_t event)
         flipp_pomodoro__toggle_stage(app->state);
         return CustomEventConsumed;
     case FlippPomodoroAppCustomEventStageComplete:
-        if (app->state->stage == Work)
+        if (flipp_pomodoro__get_stage(app->state) == Work)
         {
             // REGISTER a deed on work stage complete to get an acheivement
             DOLPHIN_DEED(DolphinDeedPluginGameWin);
         };
 
         flipp_pomodoro__toggle_stage(app->state);
-        notification_message(app->notification_app, stage_start_notification_sequence_map[app->state->stage]);
+        notification_message(app->notification_app, stage_start_notification_sequence_map[flipp_pomodoro__get_stage(app->state)]);
         return CustomEventConsumed;
     default:
         break;

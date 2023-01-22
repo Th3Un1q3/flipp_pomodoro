@@ -73,7 +73,7 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas *canvas, void *_model
     FlippPomodoroTimerViewModel *model = _model;
 
     canvas_clear(canvas);
-    canvas_draw_icon(canvas, 0, 0, stage_background_image[model->state->stage]);
+    canvas_draw_icon(canvas, 0, 0, stage_background_image[flipp_pomodoro__get_stage(model->state)]);
     flipp_pomodoro_view_timer_draw_countdown(
         canvas,
         flipp_pomodoro__stage_remaining_duration(model->state));
