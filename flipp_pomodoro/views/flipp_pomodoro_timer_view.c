@@ -74,8 +74,11 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas *canvas, void *_model
     FlippPomodoroTimerViewModel *model = _model;
 
     canvas_clear(canvas);
-    canvas_draw_icon_animation(canvas, 0, 0, model->icon);
-    // canvas_draw_icon(canvas, 0, 0, stage_background_image[flipp_pomodoro__get_stage(model->state)]);
+    if (model->icon)
+    {
+        canvas_draw_icon_animation(canvas, 0, 0, model->icon);
+    }
+
     flipp_pomodoro_view_timer_draw_countdown(
         canvas,
         flipp_pomodoro__stage_remaining_duration(model->state));
@@ -111,22 +114,31 @@ View *flipp_pomodoro_view_timer_get_view(FlippPomodoroTimerView *timer)
     return timer->view;
 };
 
+void flipp_pomodoro_view_timer_assign_animation(View *view)
+{
+    with_view_model(
+        view,
+        FlippPomodoroTimerViewModel * model,
+        {
+            furi_assert(model->state);
+            if (model->icon)
+            {
+                icon_animation_free(model->icon);
+            }
+            model->icon = icon_animation_alloc(
+                stage_background_image[flipp_pomodoro__get_stage(model->state)]);
+            view_tie_icon_animation(view, model->icon);
+            icon_animation_start(model->icon);
+        },
+        false);
+}
+
 FlippPomodoroTimerView *flipp_pomodoro_view_timer_alloc()
 {
     FlippPomodoroTimerView *timer = malloc(sizeof(FlippPomodoroTimerView));
     timer->view = view_alloc();
 
     view_allocate_model(timer->view, ViewModelTypeLockFree, sizeof(FlippPomodoroTimerViewModel));
-
-    with_view_model(
-        timer->view,
-        FlippPomodoroTimerViewModel * model,
-        {
-            model->icon = icon_animation_alloc(&A_flipp_pomodoro_focus_64);
-            view_tie_icon_animation(timer->view, model->icon);
-            icon_animation_start(model->icon);
-        },
-        false);
     view_set_context(flipp_pomodoro_view_timer_get_view(timer), timer);
     view_set_draw_callback(timer->view, flipp_pomodoro_view_timer_draw_callback);
     view_set_input_callback(timer->view, flipp_pomodoro_view_timer_input_callback);
@@ -151,14 +163,9 @@ void flipp_pomodoro_view_timer_set_state(View *view, FlippPomodoroState *state)
         FlippPomodoroTimerViewModel * model,
         {
             model->state = state;
-
-            icon_animation_free(model->icon);
-            model->icon = icon_animation_alloc(
-                stage_background_image[flipp_pomodoro__get_stage(state)]);
-            view_tie_icon_animation(view, model->icon);
-            icon_animation_start(model->icon);
         },
         false);
+    flipp_pomodoro_view_timer_assign_animation(view);
 };
 
 void flipp_pomodoro_view_timer_free(FlippPomodoroTimerView *timer)
