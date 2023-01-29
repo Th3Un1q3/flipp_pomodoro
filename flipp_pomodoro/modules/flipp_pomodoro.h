@@ -18,7 +18,6 @@ typedef struct
 } FlippPomodoroState;
 
 /// @brief Generates initial state
-/// @param state - pointer to the state of pomorodo
 /// @returns A new pre-populated state for pomodoro timer
 FlippPomodoroState *flipp_pomodoro__new();
 
