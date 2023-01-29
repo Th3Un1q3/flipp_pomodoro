@@ -30,6 +30,9 @@ static bool flipp_pomodoro_app_custom_event_callback(void *ctx, uint32_t event)
     {
     case FlippPomodoroAppCustomEventStageSkip:
         flipp_pomodoro__toggle_stage(app->state);
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher,
+            FlippPomodoroAppCustomEventStateUpdated);
         return CustomEventConsumed;
     case FlippPomodoroAppCustomEventStageComplete:
         if (flipp_pomodoro__get_stage(app->state) == Work)
@@ -40,6 +43,9 @@ static bool flipp_pomodoro_app_custom_event_callback(void *ctx, uint32_t event)
 
         flipp_pomodoro__toggle_stage(app->state);
         notification_message(app->notification_app, stage_start_notification_sequence_map[flipp_pomodoro__get_stage(app->state)]);
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher,
+            FlippPomodoroAppCustomEventStateUpdated);
         return CustomEventConsumed;
     default:
         break;
