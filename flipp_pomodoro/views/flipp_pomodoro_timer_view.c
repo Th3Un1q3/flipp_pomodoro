@@ -72,34 +72,19 @@ static void draw_str_with_drop_shadow(
     const char* str
     ) {
         canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str_aligned(
-            canvas,
-            x + 1,
-            y + 1,
-            horizontal,
-            vertical,
-            str);
-        canvas_draw_str_aligned(
-            canvas,
-            x - 1,
-            y - 1,
-            horizontal,
-            vertical,
-            str);
-        canvas_draw_str_aligned(
-            canvas,
-            x - 1,
-            y + 1,
-            horizontal,
-            vertical,
-            str);
-        canvas_draw_str_aligned(
-            canvas,
-            x + 1,
-            y - 1,
-            horizontal,
-            vertical,
-            str);
+        for (int x_off = -2; x_off <= 2; x_off++)
+        {
+            for (int y_off = -2; y_off <= 2; y_off++)
+            {
+               canvas_draw_str_aligned(
+                canvas,
+                x + x_off,
+                y + y_off,
+                horizontal,
+                vertical,
+                str);
+            }
+        }
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_str_aligned(
             canvas,
