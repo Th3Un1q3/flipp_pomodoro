@@ -3,17 +3,22 @@
 #include "../helpers/time.h"
 #include "flipp_pomodoro.h"
 
+char *current_stage_label[] = {
+    [FlippPomodoroStageFocus] = "Continue focus for:",
+    [FlippPomodoroStageRest] = "Keep rest for:",
+};
+
 char *next_stage_label[] = {
-    [Work] = "Get Rest",
-    [Rest] = "Start Work",
+    [FlippPomodoroStageFocus] = "Short Break",
+    [FlippPomodoroStageRest] = "Focus",
 };
 
 const PomodoroStage stage_rotaion_map[] = {
-    [Work] = Rest,
-    [Rest] = Work,
+    [FlippPomodoroStageFocus] = FlippPomodoroStageRest,
+    [FlippPomodoroStageRest] = FlippPomodoroStageFocus,
 };
 
-const PomodoroStage default_stage = Work;
+const PomodoroStage default_stage = FlippPomodoroStageFocus;
 
 void flipp_pomodoro__toggle_stage(FlippPomodoroState *state)
 {
@@ -26,6 +31,13 @@ PomodoroStage flipp_pomodoro__get_stage(FlippPomodoroState *state)
 {
     furi_assert(state);
     return state->stage;
+};
+
+char *flipp_pomodoro__current_stage_label(FlippPomodoroState *state)
+{
+    // TODO: add docs
+    furi_assert(state);
+    return current_stage_label[flipp_pomodoro__get_stage(state)];
 };
 
 char *flipp_pomodoro__next_stage_label(FlippPomodoroState *state)
@@ -43,8 +55,8 @@ void flipp_pomodoro__destroy(FlippPomodoroState *state)
 uint32_t flipp_pomodoro__current_stage_total_duration(FlippPomodoroState *state)
 {
     const int32_t stage_duration_seconds_map[] = {
-        [Work] = 25 * TIME_SECONDS_IN_MINUTE,
-        [Rest] = 5 * TIME_SECONDS_IN_MINUTE,
+        [FlippPomodoroStageFocus] = 25 * TIME_SECONDS_IN_MINUTE,
+        [FlippPomodoroStageRest] = 5 * TIME_SECONDS_IN_MINUTE,
     };
 
     return stage_duration_seconds_map[flipp_pomodoro__get_stage(state)];
