@@ -130,7 +130,7 @@ void flipp_pomodoro_view_timer_assign_animation(View *view)
             view_tie_icon_animation(view, model->icon);
             icon_animation_start(model->icon);
         },
-        false);
+        true);
 }
 
 FlippPomodoroTimerView *flipp_pomodoro_view_timer_alloc()
