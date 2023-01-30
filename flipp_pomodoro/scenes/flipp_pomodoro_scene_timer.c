@@ -83,7 +83,7 @@ bool flipp_pomodoro_scene_timer_on_event(void *ctx, SceneManagerEvent event)
     return SceneEventNotConusmed;
 };
 
-void flipp_pomodoro_scene_timer_on_exit(void *context)
+void flipp_pomodoro_scene_timer_on_exit(void *ctx)
 {
-    UNUSED(context);
+    UNUSED(ctx);
 };

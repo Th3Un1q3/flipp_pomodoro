@@ -32,6 +32,7 @@ typedef struct
 static const Icon *stage_background_image[] = {
     [FlippPomodoroStageFocus] = &A_flipp_pomodoro_focus_64,
     [FlippPomodoroStageRest] = &A_flipp_pomodoro_rest_64,
+    [FlippPomodoroStageLongBreak] = &A_flipp_pomodoro_rest_64,
 };
 
 static void flipp_pomodoro_view_timer_draw_countdown(Canvas *canvas, TimeDifference remaining_time)

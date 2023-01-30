@@ -3,34 +3,48 @@
 #include "../helpers/time.h"
 #include "flipp_pomodoro.h"
 
+PomodoroStage stages_sequence[] = {
+    FlippPomodoroStageFocus,
+    FlippPomodoroStageRest,
+
+    FlippPomodoroStageFocus,
+    FlippPomodoroStageRest,
+
+    FlippPomodoroStageFocus,
+    FlippPomodoroStageRest,
+
+    FlippPomodoroStageFocus,
+    FlippPomodoroStageLongBreak,
+};
+
 char *current_stage_label[] = {
     [FlippPomodoroStageFocus] = "Continue focus for:",
     [FlippPomodoroStageRest] = "Keep rest for:",
+    [FlippPomodoroStageLongBreak] = "Long Break for:",
 };
 
 char *next_stage_label[] = {
-    [FlippPomodoroStageFocus] = "Short Break",
-    [FlippPomodoroStageRest] = "Focus",
+    [FlippPomodoroStageFocus] = "Focus",
+    [FlippPomodoroStageRest] = "Short Break",
+    [FlippPomodoroStageLongBreak] = "Long Break",
 };
 
-const PomodoroStage stage_rotaion_map[] = {
-    [FlippPomodoroStageFocus] = FlippPomodoroStageRest,
-    [FlippPomodoroStageRest] = FlippPomodoroStageFocus,
-};
-
-const PomodoroStage default_stage = FlippPomodoroStageFocus;
+PomodoroStage flipp_pomodoro__stage_by_index(int index) {
+    const int one_loop_size = sizeof(stages_sequence);
+    return stages_sequence[index % one_loop_size];
+}
 
 void flipp_pomodoro__toggle_stage(FlippPomodoroState *state)
 {
     furi_assert(state);
-    state->stage = stage_rotaion_map[flipp_pomodoro__get_stage(state)];
+    state->current_stage_index = state->current_stage_index + 1;
     state->started_at_timestamp = time_now();
 };
 
 PomodoroStage flipp_pomodoro__get_stage(FlippPomodoroState *state)
 {
     furi_assert(state);
-    return state->stage;
+    return flipp_pomodoro__stage_by_index(state->current_stage_index);
 };
 
 char *flipp_pomodoro__current_stage_label(FlippPomodoroState *state)
@@ -43,7 +57,7 @@ char *flipp_pomodoro__current_stage_label(FlippPomodoroState *state)
 char *flipp_pomodoro__next_stage_label(FlippPomodoroState *state)
 {
     furi_assert(state);
-    return next_stage_label[flipp_pomodoro__get_stage(state)];
+    return next_stage_label[flipp_pomodoro__stage_by_index(state->current_stage_index + 1)];
 };
 
 void flipp_pomodoro__destroy(FlippPomodoroState *state)
@@ -57,6 +71,7 @@ uint32_t flipp_pomodoro__current_stage_total_duration(FlippPomodoroState *state)
     const int32_t stage_duration_seconds_map[] = {
         [FlippPomodoroStageFocus] = 25 * TIME_SECONDS_IN_MINUTE,
         [FlippPomodoroStageRest] = 5 * TIME_SECONDS_IN_MINUTE,
+        [FlippPomodoroStageLongBreak] = 30 * TIME_SECONDS_IN_MINUTE,
     };
 
     return stage_duration_seconds_map[flipp_pomodoro__get_stage(state)];
@@ -85,6 +100,6 @@ FlippPomodoroState *flipp_pomodoro__new()
     FlippPomodoroState *state = malloc(sizeof(FlippPomodoroState));
     const uint32_t now = time_now();
     state->started_at_timestamp = now;
-    state->stage = default_stage;
+    state->current_stage_index = 0;
     return state;
 };

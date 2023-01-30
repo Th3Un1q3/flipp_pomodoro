@@ -10,4 +10,5 @@ extern const NotificationSequence rest_start_notification;
 const NotificationSequence *stage_start_notification_sequence_map[] = {
     [FlippPomodoroStageFocus] = &work_start_notification,
     [FlippPomodoroStageRest] = &rest_start_notification,
+    [FlippPomodoroStageLongBreak] = &rest_start_notification,
 };

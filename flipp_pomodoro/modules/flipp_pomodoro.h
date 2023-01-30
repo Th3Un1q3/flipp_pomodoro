@@ -8,12 +8,14 @@ typedef enum
 {
     FlippPomodoroStageFocus,
     FlippPomodoroStageRest,
+    FlippPomodoroStageLongBreak,
 } PomodoroStage;
 
 /// @brief State of the pomodoro timer
 typedef struct
 {
     PomodoroStage stage;
+    uint8_t current_stage_index;
     uint32_t started_at_timestamp;
 } FlippPomodoroState;
 
