@@ -49,7 +49,6 @@ PomodoroStage flipp_pomodoro__get_stage(FlippPomodoroState *state)
 
 char *flipp_pomodoro__current_stage_label(FlippPomodoroState *state)
 {
-    // TODO: add docs
     furi_assert(state);
     return current_stage_label[flipp_pomodoro__get_stage(state)];
 };

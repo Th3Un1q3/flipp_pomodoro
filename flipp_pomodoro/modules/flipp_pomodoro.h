@@ -36,6 +36,9 @@ void flipp_pomodoro__destroy(FlippPomodoroState *state);
 /// @returns Time difference to the end of current stage
 TimeDifference flipp_pomodoro__stage_remaining_duration(FlippPomodoroState *state);
 
+/// @brief Label of currently active stage
+/// @param state - pointer to the state of pomorodo
+/// @returns A string that explains current stage
 char *flipp_pomodoro__current_stage_label(FlippPomodoroState *state);
 
 /// @brief Label of transition to the next stage
