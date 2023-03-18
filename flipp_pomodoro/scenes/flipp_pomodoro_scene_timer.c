@@ -1,6 +1,8 @@
 #include <furi.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
+#include <gui/scene_manager.h>
+#include "scenes/flipp_pomodoro_scene.h"
 #include "../flipp_pomodoro_app.h"
 #include "../views/flipp_pomodoro_timer_view.h"
 
@@ -76,7 +78,9 @@ bool flipp_pomodoro_scene_timer_on_event(void *ctx, SceneManagerEvent event)
             event.event);
         return SceneEventConusmed;
     case SceneManagerEventTypeBack:
-        return ExitSignal;
+
+        scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneInfo);
+        return SceneEventConusmed;
     default:
         break;
     };
