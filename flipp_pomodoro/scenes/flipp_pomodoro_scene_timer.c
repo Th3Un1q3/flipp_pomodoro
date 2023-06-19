@@ -12,8 +12,6 @@ enum
     SceneEventNotConusmed = false
 };
 
-uint8_t ExitSignal = 0;
-
 void flipp_pomodoro_scene_timer_sync_view_state(void *ctx)
 {
     furi_assert(ctx);
