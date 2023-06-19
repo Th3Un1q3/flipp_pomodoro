@@ -71,11 +71,17 @@ FlippPomodoroApp *flipp_pomodoro_app_alloc()
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, flipp_pomodoro_app_back_event_callback);
 
     app->timer_view = flipp_pomodoro_view_timer_alloc();
+    app->info_view = flipp_pomodoro_info_view_alloc();
 
     view_dispatcher_add_view(
         app->view_dispatcher,
         FlippPomodoroAppViewTimer,
         flipp_pomodoro_view_timer_get_view(app->timer_view));
+
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        FlippPomodoroAppViewInfo,
+        flipp_pomodoro_info_view_get_view(app->info_view));
 
     scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneTimer);
 
@@ -88,6 +94,7 @@ void flipp_pomodoro_app_free(FlippPomodoroApp *app)
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
     flipp_pomodoro_view_timer_free(app->timer_view);
+    flipp_pomodoro_info_view_free(app->info_view);
     flipp_pomodoro__destroy(app->state);
     free(app);
     furi_record_close(RECORD_GUI);

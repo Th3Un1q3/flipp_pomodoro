@@ -2,7 +2,7 @@
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
-#include "scenes/flipp_pomodoro_scene.h"
+#include "flipp_pomodoro_scene.h"
 #include "../flipp_pomodoro_app.h"
 #include "../views/flipp_pomodoro_timer_view.h"
 

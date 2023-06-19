@@ -7,6 +7,7 @@
 #include <gui/scene_manager.h>
 #include <notification/notification_messages.h>
 #include "views/flipp_pomodoro_timer_view.h"
+#include "views/flipp_pomodoro_info_view.h"
 
 #include "modules/flipp_pomodoro.h"
 
@@ -17,6 +18,7 @@ typedef enum
     FlippPomodoroAppCustomEventStageComplete, // By Expiration
     FlippPomodoroAppCustomEventTimerTick,
     FlippPomodoroAppCustomEventStateUpdated,
+    FlippPomodoroAppCustomEventResumeTimer,
 } FlippPomodoroAppCustomEvent;
 
 typedef struct
@@ -26,10 +28,12 @@ typedef struct
     Gui *gui;
     NotificationApp *notification_app;
     FlippPomodoroTimerView *timer_view;
+    FlippPomodoroInfoView *info_view;
     FlippPomodoroState *state;
 } FlippPomodoroApp;
 
 typedef enum
 {
     FlippPomodoroAppViewTimer,
+    FlippPomodoroAppViewInfo,
 } FlippPomodoroAppView;
