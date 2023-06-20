@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
@@ -10,6 +11,7 @@
 #include "views/flipp_pomodoro_info_view.h"
 
 #include "modules/flipp_pomodoro.h"
+#include "modules/flipp_pomodoro_statistics.h"
 
 typedef enum
 {
@@ -30,6 +32,7 @@ typedef struct
     FlippPomodoroTimerView *timer_view;
     FlippPomodoroInfoView *info_view;
     FlippPomodoroState *state;
+    FlippPomodoroStatistics *statistics;
 } FlippPomodoroApp;
 
 typedef enum

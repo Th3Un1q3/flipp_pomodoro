@@ -40,6 +40,11 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
 
     FlippPomodoroApp *app = ctx;
 
+    if(flipp_pomodoro__is_stage_expired(app->state)) {
+        flipp_pomodoro__destroy(app->state);
+        app->state = flipp_pomodoro__new();
+    }
+
     view_dispatcher_switch_to_view(app->view_dispatcher, FlippPomodoroAppViewTimer);
     flipp_pomodoro_scene_timer_sync_view_state(app);
     flipp_pomodoro_view_timer_set_on_right_cb(
@@ -76,7 +81,6 @@ bool flipp_pomodoro_scene_timer_on_event(void *ctx, SceneManagerEvent event)
             event.event);
         return SceneEventConusmed;
     case SceneManagerEventTypeBack:
-
         scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneInfo);
         return SceneEventConusmed;
     default:
