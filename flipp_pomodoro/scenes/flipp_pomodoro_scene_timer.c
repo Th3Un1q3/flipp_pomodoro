@@ -40,7 +40,8 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
 
     FlippPomodoroApp *app = ctx;
 
-    if(flipp_pomodoro__is_stage_expired(app->state)) {
+    if (flipp_pomodoro__is_stage_expired(app->state))
+    {
         flipp_pomodoro__destroy(app->state);
         app->state = flipp_pomodoro__new();
     }

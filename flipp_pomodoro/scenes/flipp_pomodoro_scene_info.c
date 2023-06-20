@@ -11,15 +11,14 @@ enum
     SceneEventNotConusmed = false
 };
 
-
 void flipp_pomodoro_scene_info_on_back_to_timer(void *ctx)
 {
     furi_assert(ctx);
     FlippPomodoroApp *app = ctx;
 
     view_dispatcher_send_custom_event(
-            app->view_dispatcher,
-            FlippPomodoroAppCustomEventResumeTimer);
+        app->view_dispatcher,
+        FlippPomodoroAppCustomEventResumeTimer);
 };
 
 void flipp_pomodoro_scene_info_on_enter(void *ctx)
@@ -62,7 +61,6 @@ bool flipp_pomodoro_scene_info_on_event(void *ctx, SceneManagerEvent event)
     };
     return SceneEventNotConusmed;
 };
-
 
 void flipp_pomodoro_scene_info_on_exit(void *ctx)
 {

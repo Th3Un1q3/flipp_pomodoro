@@ -121,7 +121,6 @@ int32_t flipp_pomodoro_app(void *p)
 
     view_dispatcher_run(app->view_dispatcher);
 
-
     flipp_pomodoro_app_free(app);
 
     return 0;

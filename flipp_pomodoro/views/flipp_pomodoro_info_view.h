@@ -2,7 +2,8 @@
 
 #include <gui/view.h>
 
-typedef enum {
+typedef enum
+{
     FlippPomodoroInfoViewModeStats,
     FlippPomodoroInfoViewModeAbout,
 } FlippPomodoroInfoViewMode;
