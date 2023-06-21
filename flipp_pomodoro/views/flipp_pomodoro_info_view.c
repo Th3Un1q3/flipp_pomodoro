@@ -28,8 +28,6 @@ typedef struct
 
 static void flipp_pomodoro_info_view_draw_statistics(Canvas *canvas, FlippPomodoroInfoViewModel *model)
 {
-    // TODO: check all unused
-    UNUSED(model);
     FuriString *stats_string = furi_string_alloc();
 
     furi_string_printf(stats_string, "So Long,\nand Thanks for All the Focus...\nand for completing\n%i pomodoro(s)", model->pomodoros_completed);
@@ -66,8 +64,6 @@ static void flipp_pomodoro_info_view_draw_callback(Canvas *canvas, void *_model)
     };
 
     FlippPomodoroInfoViewModel *model = _model;
-    // TODO: remove once used;
-    UNUSED(model);
 
     canvas_clear(canvas);
 
@@ -109,31 +105,20 @@ void flipp_pomodoro_info_view_toggle_mode(FlippPomodoroInfoView *info_view)
 
 bool flipp_pomodoro_info_view_input_callback(InputEvent *event, void *ctx)
 {
-    UNUSED(event);
-    UNUSED(ctx);
-
     FlippPomodoroInfoView *info_view = ctx;
 
-    const bool should_trigger_resume_cb = (event->type == InputTypePress) &&
-                                          (event->key == InputKeyRight) &&
-                                          (info_view->resume_timer_cb != NULL);
-
-    if (should_trigger_resume_cb)
+    if (event->type == InputTypePress) 
     {
-        furi_assert(info_view->resume_timer_cb);
-        furi_assert(info_view->user_action_cb_ctx);
-        info_view->resume_timer_cb(info_view->user_action_cb_ctx);
-        return ViewInputConsumed;
-    }
-
-    const bool should_switch_mode = (event->type == InputTypePress) &&
-                                    (event->key == InputKeyLeft);
-
-    if (should_switch_mode)
-    {
-
-        flipp_pomodoro_info_view_toggle_mode(info_view);
-        return ViewInputConsumed;
+        if (event->key == InputKeyRight && info_view->resume_timer_cb != NULL)
+        {
+            info_view->resume_timer_cb(info_view->user_action_cb_ctx);
+            return ViewInputConsumed;
+        }
+        else if (event->key == InputKeyLeft) 
+        {
+            flipp_pomodoro_info_view_toggle_mode(info_view);
+            return ViewInputConsumed;
+        }
     }
 
     return ViewInputNotConusmed;
@@ -146,7 +131,6 @@ FlippPomodoroInfoView *flipp_pomodoro_info_view_alloc()
 
     view_allocate_model(flipp_pomodoro_info_view_get_view(info_view), ViewModelTypeLockFree, sizeof(FlippPomodoroInfoViewModel));
     view_set_context(flipp_pomodoro_info_view_get_view(info_view), info_view);
-    // TODO: complete by implementing these methods
     view_set_draw_callback(flipp_pomodoro_info_view_get_view(info_view), flipp_pomodoro_info_view_draw_callback);
     view_set_input_callback(flipp_pomodoro_info_view_get_view(info_view), flipp_pomodoro_info_view_input_callback);
 

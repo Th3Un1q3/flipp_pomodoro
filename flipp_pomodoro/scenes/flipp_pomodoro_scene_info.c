@@ -27,7 +27,6 @@ void flipp_pomodoro_scene_info_on_enter(void *ctx)
     FlippPomodoroApp *app = ctx;
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlippPomodoroAppViewInfo);
-    // TODO: provide view with real number of pomodoros
     flipp_pomodoro_info_view_set_pomodoros_completed(
         flipp_pomodoro_info_view_get_view(app->info_view),
         flipp_pomodoro_statistics__get_focus_stages_completed(app->statistics));
