@@ -18,15 +18,15 @@ PomodoroStage stages_sequence[] = {
 };
 
 char *current_stage_label[] = {
-    [FlippPomodoroStageFocus] = "Continue focus for:",
-    [FlippPomodoroStageRest] = "Keep rest for:",
-    [FlippPomodoroStageLongBreak] = "Long Break for:",
+    [FlippPomodoroStageFocus] = "Focusing...",
+    [FlippPomodoroStageRest] = "Short Break...",
+    [FlippPomodoroStageLongBreak] = "Long Break...",
 };
 
 char *next_stage_label[] = {
-    [FlippPomodoroStageFocus] = "Focus",
-    [FlippPomodoroStageRest] = "Short Break",
-    [FlippPomodoroStageLongBreak] = "Long Break",
+    [FlippPomodoroStageFocus] = "Start Focus",
+    [FlippPomodoroStageRest] = "Take Short Break",
+    [FlippPomodoroStageLongBreak] = "Take Long Break",
 };
 
 PomodoroStage flipp_pomodoro__stage_by_index(int index) {

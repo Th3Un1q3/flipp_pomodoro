@@ -30,7 +30,7 @@ static void flipp_pomodoro_info_view_draw_statistics(Canvas *canvas, FlippPomodo
 {
     FuriString *stats_string = furi_string_alloc();
 
-    furi_string_printf(stats_string, "So Long,\nand Thanks for All the Focus...\nand for completing\n%i pomodoro(s)", model->pomodoros_completed);
+    furi_string_printf(stats_string, "So Long,\nand Thanks for All the Focus...\nand for completing\n\e#%i\e# pomodoro(s)", model->pomodoros_completed);
     const char *stats_string_formatted = furi_string_get_cstr(stats_string);
 
     elements_text_box(
