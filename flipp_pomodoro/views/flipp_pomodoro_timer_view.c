@@ -27,6 +27,8 @@ typedef struct
 {
     IconAnimation *icon;
     FlippPomodoroState *state;
+    size_t scroll_counter;
+    char *current_hint;
 } FlippPomodoroTimerViewModel;
 
 static const Icon *stage_background_image[] = {
@@ -108,6 +110,38 @@ static void flipp_pomodoro_view_timer_draw_current_stage_label(Canvas *canvas, F
         flipp_pomodoro__current_stage_label(state));
 }
 
+static void flipp_pomodoro_view_timer_draw_hint(Canvas *canvas, FlippPomodoroTimerViewModel *model)
+{
+    if(model->scroll_counter > 128 || model->current_hint == NULL) {
+        return;
+    }
+    model->scroll_counter++;
+
+    uint8_t hint_width = 80;
+    uint8_t hint_height = 15;
+
+    uint8_t hint_x = canvas_width(canvas) - hint_width - 6;
+    uint8_t hint_y = 35;
+
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_box(canvas, hint_x, hint_y, hint_width + 3, hint_height);
+    canvas_set_color(canvas, ColorBlack);
+
+    elements_bubble(canvas, hint_x, hint_y, hint_width, hint_height);
+
+    FuriString *displayed_hint_string = furi_string_alloc_set_str(model->current_hint);
+    elements_scrollable_text_line(
+        canvas,
+        hint_x + 6,
+        hint_y + 10,
+        hint_width - 4,
+        displayed_hint_string,
+        model->scroll_counter / 1.5,
+        false);
+    furi_string_free(displayed_hint_string);
+    free(displayed_hint_string);
+}
+
 static void flipp_pomodoro_view_timer_draw_callback(Canvas *canvas, void *_model)
 {
     if (!_model)
@@ -128,10 +162,12 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas *canvas, void *_model
         flipp_pomodoro__stage_remaining_duration(model->state));
 
     flipp_pomodoro_view_timer_draw_current_stage_label(canvas, model->state);
+
     canvas_set_color(canvas, ColorBlack);
 
     canvas_set_font(canvas, FontSecondary);
     elements_button_right(canvas, flipp_pomodoro__next_stage_label(model->state));
+    flipp_pomodoro_view_timer_draw_hint(canvas, model);
 };
 
 bool flipp_pomodoro_view_timer_input_callback(InputEvent *event, void *ctx)
@@ -161,13 +197,24 @@ View *flipp_pomodoro_view_timer_get_view(FlippPomodoroTimerView *timer)
     return timer->view;
 };
 
+void flipp_pomodoro_view_timer_display_hint(View *view, char *hint)
+{
+    with_view_model(
+        view,
+        FlippPomodoroTimerViewModel * model,
+        {
+            model->scroll_counter = 0;
+            model->current_hint = hint;
+        },
+        false);
+}
+
 void flipp_pomodoro_view_timer_assign_animation(View *view)
 {
     with_view_model(
         view,
         FlippPomodoroTimerViewModel * model,
         {
-            furi_assert(model->state);
             if (model->icon)
             {
                 icon_animation_free(model->icon);
@@ -186,9 +233,18 @@ FlippPomodoroTimerView *flipp_pomodoro_view_timer_alloc()
     timer->view = view_alloc();
 
     view_allocate_model(flipp_pomodoro_view_timer_get_view(timer), ViewModelTypeLockFree, sizeof(FlippPomodoroTimerViewModel));
+
     view_set_context(flipp_pomodoro_view_timer_get_view(timer), timer);
     view_set_draw_callback(timer->view, flipp_pomodoro_view_timer_draw_callback);
     view_set_input_callback(timer->view, flipp_pomodoro_view_timer_input_callback);
+
+    with_view_model(
+        flipp_pomodoro_view_timer_get_view(timer),
+        FlippPomodoroTimerViewModel * model,
+        {
+            model->scroll_counter = 0;
+        },
+        false);
 
     return timer;
 };

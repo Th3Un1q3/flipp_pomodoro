@@ -52,6 +52,10 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
         app->timer_view,
         flipp_pomodoro_scene_timer_on_next_stage,
         app);
+
+    flipp_pomodoro_view_timer_display_hint(
+        flipp_pomodoro_view_timer_get_view(app->timer_view),
+        "       Hey there! Are you ready to be productive today? Let's go!");
 };
 
 void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, FlippPomodoroAppCustomEvent custom_event)
