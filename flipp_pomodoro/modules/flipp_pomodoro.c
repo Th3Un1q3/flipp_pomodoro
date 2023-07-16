@@ -24,9 +24,9 @@ char *current_stage_label[] = {
 };
 
 char *next_stage_label[] = {
-    [FlippPomodoroStageFocus] = "Start Focus",
-    [FlippPomodoroStageRest] = "Take Short Break",
-    [FlippPomodoroStageLongBreak] = "Take Long Break",
+    [FlippPomodoroStageFocus] = "Focus",
+    [FlippPomodoroStageRest] = "Short Break",
+    [FlippPomodoroStageLongBreak] = "Long Break",
 };
 
 PomodoroStage flipp_pomodoro__stage_by_index(int index) {

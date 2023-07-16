@@ -20,7 +20,8 @@ struct FlippPomodoroTimerView
 {
     View *view;
     FlippPomodoroTimerViewInputCb right_cb;
-    void *right_cb_ctx;
+    FlippPomodoroTimerViewInputCb ok_cb;
+    void *callback_context;
 };
 
 typedef struct
@@ -112,16 +113,37 @@ static void flipp_pomodoro_view_timer_draw_current_stage_label(Canvas *canvas, F
 
 static void flipp_pomodoro_view_timer_draw_hint(Canvas *canvas, FlippPomodoroTimerViewModel *model)
 {
-    if(model->scroll_counter > 128 || model->current_hint == NULL) {
+    size_t MAX_SCROLL_COUNTER = 300;
+    uint8_t SCROLL_DELAY_FRAMES = 3;
+
+    if (model->scroll_counter >= MAX_SCROLL_COUNTER || model->current_hint == NULL)
+    {
         return;
     }
-    model->scroll_counter++;
 
-    uint8_t hint_width = 80;
-    uint8_t hint_height = 15;
+    uint8_t hint_width = 90;
+    uint8_t hint_height = 18;
 
     uint8_t hint_x = canvas_width(canvas) - hint_width - 6;
     uint8_t hint_y = 35;
+
+    FuriString *displayed_hint_string = furi_string_alloc();
+
+    furi_string_printf(
+        displayed_hint_string,
+        "%s",
+        model->current_hint);
+
+    size_t perfect_duration = furi_string_size(displayed_hint_string) * 1.5;
+
+    if (model->scroll_counter > perfect_duration)
+    {
+        model->scroll_counter = MAX_SCROLL_COUNTER;
+        furi_string_free(displayed_hint_string);
+        return;
+    }
+
+    size_t scroll_offset = (model->scroll_counter < SCROLL_DELAY_FRAMES) ? 0 : model->scroll_counter - SCROLL_DELAY_FRAMES;
 
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_box(canvas, hint_x, hint_y, hint_width + 3, hint_height);
@@ -129,17 +151,16 @@ static void flipp_pomodoro_view_timer_draw_hint(Canvas *canvas, FlippPomodoroTim
 
     elements_bubble(canvas, hint_x, hint_y, hint_width, hint_height);
 
-    FuriString *displayed_hint_string = furi_string_alloc_set_str(model->current_hint);
     elements_scrollable_text_line(
         canvas,
         hint_x + 6,
-        hint_y + 10,
+        hint_y + 12,
         hint_width - 4,
         displayed_hint_string,
-        model->scroll_counter / 1.5,
-        false);
+        scroll_offset,
+        true);
     furi_string_free(displayed_hint_string);
-    free(displayed_hint_string);
+    model->scroll_counter++;
 }
 
 static void flipp_pomodoro_view_timer_draw_callback(Canvas *canvas, void *_model)
@@ -176,19 +197,24 @@ bool flipp_pomodoro_view_timer_input_callback(InputEvent *event, void *ctx)
     furi_assert(event);
     FlippPomodoroTimerView *timer = ctx;
 
-    const bool should_trigger_right_event_cb = (event->type == InputTypePress) &&
-                                               (event->key == InputKeyRight) &&
-                                               (timer->right_cb != NULL);
+    const bool is_press_event = event->type == InputTypePress;
 
-    if (should_trigger_right_event_cb)
+    if (!is_press_event)
     {
-        furi_assert(timer->right_cb);
-        furi_assert(timer->right_cb_ctx);
-        timer->right_cb(timer->right_cb_ctx);
-        return ViewInputConsumed;
-    };
+        return ViewInputNotConusmed;
+    }
 
-    return ViewInputNotConusmed;
+    switch (event->key)
+    {
+    case InputKeyRight:
+        timer->right_cb(timer->callback_context);
+        return ViewInputConsumed;
+    case InputKeyOk:
+        timer->ok_cb(timer->callback_context);
+        return ViewInputConsumed;
+    default:
+        return ViewInputNotConusmed;
+    }
 };
 
 View *flipp_pomodoro_view_timer_get_view(FlippPomodoroTimerView *timer)
@@ -206,7 +232,7 @@ void flipp_pomodoro_view_timer_display_hint(View *view, char *hint)
             model->scroll_counter = 0;
             model->current_hint = hint;
         },
-        false);
+        true);
 }
 
 void flipp_pomodoro_view_timer_assign_animation(View *view)
@@ -249,13 +275,26 @@ FlippPomodoroTimerView *flipp_pomodoro_view_timer_alloc()
     return timer;
 };
 
-void flipp_pomodoro_view_timer_set_on_right_cb(FlippPomodoroTimerView *timer, FlippPomodoroTimerViewInputCb right_cb, void *right_cb_ctx)
+void flipp_pomodoro_view_timer_set_callback_context(FlippPomodoroTimerView *timer, void *callback_ctx)
 {
+    furi_assert(timer);
+    furi_assert(callback_ctx);
+    timer->callback_context = callback_ctx;
+}
+
+void flipp_pomodoro_view_timer_set_on_right_cb(FlippPomodoroTimerView *timer, FlippPomodoroTimerViewInputCb right_cb)
+{
+    furi_assert(timer);
     furi_assert(right_cb);
-    furi_assert(right_cb_ctx);
     timer->right_cb = right_cb;
-    timer->right_cb_ctx = right_cb_ctx;
 };
+
+void flipp_pomodoro_view_timer_set_on_ok_cb(FlippPomodoroTimerView *timer, FlippPomodoroTimerViewInputCb ok_kb)
+{
+    furi_assert(ok_kb);
+    furi_assert(timer);
+    timer->ok_cb = ok_kb;
+}
 
 void flipp_pomodoro_view_timer_set_state(View *view, FlippPomodoroState *state)
 {
@@ -266,6 +305,7 @@ void flipp_pomodoro_view_timer_set_state(View *view, FlippPomodoroState *state)
         FlippPomodoroTimerViewModel * model,
         {
             model->state = state;
+            model->current_hint = NULL;
         },
         false);
     flipp_pomodoro_view_timer_assign_animation(view);
