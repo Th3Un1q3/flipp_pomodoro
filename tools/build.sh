@@ -34,7 +34,7 @@ done
 
 cd "${repo_root}/.${build_mode}-firmware"
 
-api_version=$(awk -F',' 'NR == 2 {print $3}' firmware/targets/f7/api_symbols.csv);
+api_version=$(awk -F',' 'NR == 2 {print $3}' targets/f7/api_symbols.csv);
 
 app_suffix="${build_mode}_${api_version}"
 

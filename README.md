@@ -72,7 +72,7 @@ You can follow project development on the [project board](https://github.com/use
 
 
 ###  Build and Package
-Build application
+Build application commands
 ```shell
 # For standard(official) firmware
 bash tools/build.sh
@@ -81,6 +81,6 @@ bash tools/build.sh
 bash tools/build.sh -f unleashed 
 
 # While flipper connected via USB and serial port is not bussy
-# Build, run on flipper and keep the app in `Productivity` directory
+# Build, run on flipper and keep the app in `Tools` directory
 bash tools/build.sh -f unleashed -i
 ```
