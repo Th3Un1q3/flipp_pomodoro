@@ -16,17 +16,17 @@
 
 [![Latest Release Date](https://img.shields.io/github/release-date/Th3Un1q3/flipp_pomodoro?label=Latest%20release%20&style=for-the-badge) ![Latest Release](https://img.shields.io/github/v/release/Th3Un1q3/flipp_pomodoro?label=Latest%20version&style=for-the-badge) ![GitHub release (latest by date)](https://img.shields.io/github/downloads/Th3Un1q3/flipp_pomodoro/latest/total?label=Latest%20downloaded&style=for-the-badge)](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest)
 
-## From Repository
+### From Repository
 
 Download from [releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest) and follow instructions there.
 
-## From Application Marketplace
+### From Application Marketplace
 
 - Using `Flipper` Mobile App
 - Open `Hub` tab, then open `Apps`
 - Find and install `Flipp Pomodoro`
 
-## Bundled into Firmware
+### Bundled into Firmware
 
 `Flipp Pomodoro` is prepacked in [unleased firmware](https://github.com/DarkFlippers/unleashed-firmware/releases) releases suffixed with `e`. Once you have the firmware installed, you can find `Flipp Pomodoro` among `Tools`.
 
