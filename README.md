@@ -26,7 +26,7 @@ Download from [releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/lat
 - Open `Hub` tab, then open `Apps`
 - Find and install `Flipp Pomodoro`
 
-## Pre-packed into firmware
+## Bundled into Firmware
 
 `Flipp Pomodoro` is prepacked in [unleased firmware](https://github.com/DarkFlippers/unleashed-firmware/releases) releases suffixed with `e`. Once you have the firmware installed, you can find `Flipp Pomodoro` among `Tools`.
 
