@@ -34,7 +34,32 @@ done
 
 cd "${repo_root}/.${build_mode}-firmware"
 
-api_version=$(awk -F',' 'NR == 2 {print $3}' firmware/targets/f7/api_symbols.csv);
+
+# Define the possible file paths
+file_path1="firmware/targets/f7/api_symbols.csv"
+file_path2="targets/f7/api_symbols.csv"
+
+# Function to extract the API version from a CSV file
+extract_api_version() {
+    local file_path=$1
+    local api_version=$(awk -F',' 'NR == 2 {print $3}' "$file_path")
+    echo "$api_version"
+}
+
+# Try to extract from the first file path
+api_version=$(extract_api_version "$file_path1")
+
+# If the first attempt fails, try the second file path
+if [ -z "$api_version" ]; then
+    api_version=$(extract_api_version "$file_path2")
+fi
+
+# Check if the API version is still not found
+if [ -z "$api_version" ]; then
+    echo "Error: API version not found in either file path."
+else
+    echo "API version: $api_version"
+fi
 
 app_suffix="${build_mode}_${api_version}"
 
