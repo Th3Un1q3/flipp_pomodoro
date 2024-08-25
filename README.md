@@ -1,4 +1,4 @@
-# Flipp Pomodoro
+elmo# Flipp Pomodoro
 ![Banner Image](docs/headline.gif)
 
 >Boost Your Productivity with the Pomodoro Timer for Flipper Zero! Don't let your flipper get bored, let him help you instead.
