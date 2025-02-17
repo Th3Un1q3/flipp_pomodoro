@@ -1,0 +1,9 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+
+.git
+.github
+.cursorignore
+.cursorignore
+.cursorignore
+.standard-firmware
+.unleashed-firmware
