@@ -158,3 +158,62 @@ The main logic points to verify are:
 *   `on_event` (Back button): Values from the settings view are correctly retrieved (via `flipp_pomodoro_settings_view_get_..._time`) and saved to `app->state` (via `flipp_pomodoro__set_settings`).
 
 These would typically be verified by running the app on a device/simulator, navigating to the settings screen, changing values, saving, and then observing if the timer behavior (e.g., stage durations) reflects these new settings.
+
+## IV. Settings Persistence (`flipp_pomodoro_settings_storage.c`)
+
+These tests verify that timer settings are correctly saved to and loaded from persistent storage. They generally require interaction with the application on a device or simulator, and potentially filesystem inspection tools for some cases.
+
+### Test Case 4.1: Settings Loaded Correctly on Startup
+*   **Description:** Verify that previously saved settings are loaded when the application starts.
+*   **Actions:**
+    1.  Start the Flipp Pomodoro application.
+    2.  Navigate to the settings screen.
+    3.  Modify timer settings to non-default values (e.g., Work: 30, Short Break: 7, Long Break: 35).
+    4.  Save settings (e.g., by exiting the settings screen if it auto-saves).
+    5.  Close and restart the Flipp Pomodoro application.
+    6.  Navigate to the settings screen again.
+*   **Expected Output:** The settings screen should display the modified values (30, 7, 35). The timer functionality should also use these new durations.
+
+### Test Case 4.2: Settings Saved Correctly After Modification
+*   **Description:** Verify that changes made in the settings screen are persisted across application restarts.
+*   **Actions:**
+    1.  Start the application.
+    2.  Navigate to the settings screen.
+    3.  Change settings to new, distinct values (e.g., Work: 20, Short Break: 4, Long Break: 25).
+    4.  Save and exit the settings screen.
+    5.  (Optional: If filesystem tools are available, check if a file named `flipp_pomodoro.settings` exists in the application's data directory, e.g., `apps_data/flipp_pomodoro/` or `SDCard/apps_data/flipp_pomodoro/`, and that its modification timestamp has been updated.)
+    6.  Close and restart the application.
+    7.  Navigate to the settings screen.
+*   **Expected Output:** The settings screen should display the new values (20, 4, 25).
+
+### Test Case 4.3: Default Settings Used if Settings File Missing
+*   **Description:** Verify that default settings are used if the settings file is not present upon application start, and that a new file is then created with these defaults.
+*   **Actions:**
+    1.  If possible, ensure no `flipp_pomodoro.settings` file exists in the application's data directory (e.g., delete it using Flipper's file manager or qFlipper if it exists from a previous run).
+    2.  Start the Flipp Pomodoro application.
+    3.  Navigate to the settings screen.
+*   **Expected Output:**
+    *   The settings screen should display the application's default values (e.g., Work: 25, Short Break: 5, Long Break: 30).
+    *   (After this first run and exiting the settings screen or the app gracefully) A `flipp_pomodoro.settings` file should now exist and contain these default values, so subsequent restarts load these defaults.
+
+### Test Case 4.4: Default Settings Used and File Recreated if Settings File Corrupt
+*   **Description:** Verify that default settings are used if the settings file is found to be corrupt (e.g., wrong size, unreadable data), and that the corrupt file is then overwritten with a valid file containing default settings.
+*   **Actions:**
+    1.  (Difficult to perform without direct filesystem manipulation tools) If possible, create a `flipp_pomodoro.settings` file in the application's data directory with invalid content (e.g., make it an empty file, or fill it with random bytes, or make it shorter than `sizeof(FlippPomodoroSettings)`).
+    2.  Start the Flipp Pomodoro application.
+    3.  Navigate to the settings screen.
+*   **Expected Output:**
+    *   The settings screen should display the default values (Work: 25, Short Break: 5, Long Break: 30).
+    *   The application should have attempted to save these defaults, overwriting the corrupt file. Subsequent restarts should load these defaults correctly.
+
+### Test Case 4.5: Settings File Created with Defaults on First Clean Run
+*   **Description:** This is similar to Test Case 4.3 but focuses on the explicit creation of the file. Verify that a settings file with default values is created if one doesn't exist when the app first attempts to load settings (which usually happens at startup).
+*   **Actions:**
+    1.  Ensure no `flipp_pomodoro.settings` file exists in the application's data directory.
+    2.  Start the Flipp Pomodoro application.
+    3.  (Optional: Check for the creation of `flipp_pomodoro.settings` in the data directory. It should contain the default settings.)
+    4.  Navigate to the settings screen and verify default values are displayed.
+    5.  Close the application.
+    6.  Restart the application.
+    7.  Navigate to the settings screen again.
+*   **Expected Output:** Default values are shown on the first run. After restarting, these same default values are loaded, indicating the file was created successfully during or after the first run and is now being read.

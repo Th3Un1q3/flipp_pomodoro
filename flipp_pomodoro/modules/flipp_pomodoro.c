@@ -2,6 +2,7 @@
 #include <furi_hal.h>
 #include "../helpers/time.h"
 #include "flipp_pomodoro.h"
+#include "../services/flipp_pomodoro_settings_storage.h" // For settings_load
 
 PomodoroStage stages_sequence[] = {
     FlippPomodoroStageFocus,
@@ -117,6 +118,9 @@ FlippPomodoroState *flipp_pomodoro__new()
     state->settings.work_minutes = 25;
     state->settings.short_break_minutes = 5;
     state->settings.long_break_minutes = 30;
+
+    // Load persisted settings, potentially overriding the defaults above
+    flipp_pomodoro_settings_load(state);
 
     return state;
 };

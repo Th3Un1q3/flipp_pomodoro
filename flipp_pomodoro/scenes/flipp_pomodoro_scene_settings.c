@@ -2,9 +2,10 @@
 #include "../flipp_pomodoro_app.h" // Provides FlippPomodoroApp and scene definitions
 #include "../modules/flipp_pomodoro.h" // Provides flipp_pomodoro__get_settings, etc.
 #include "../views/flipp_pomodoro_settings_view.h"
+#include "../services/flipp_pomodoro_settings_storage.h" // For saving settings
 #include <gui/scene_manager.h> // For scene navigation
 #include <gui/view_dispatcher.h> // For view dispatcher
-#include <furi.h> // For FURI_LOG_I, UNUSED
+#include <furi.h> // For FURI_LOG_I, UNUSED, FURI_LOG_E
 
 // No need for forward declarations, they are in the header
 
@@ -39,12 +40,20 @@ bool flipp_pomodoro_scene_settings_on_event(void* context, SceneManagerEvent eve
             new_settings.short_break_minutes = flipp_pomodoro_settings_view_get_short_break_time(app->settings_view);
             new_settings.long_break_minutes = flipp_pomodoro_settings_view_get_long_break_time(app->settings_view);
             flipp_pomodoro__set_settings(app->state, &new_settings);
-            FURI_LOG_I("FlippPomodoro", "Settings saved from view.");
+            FURI_LOG_I("FlippPomodoro", "Settings applied to app state from view.");
+
+            if(flipp_pomodoro_settings_save(app->state)) {
+                FURI_LOG_I("FlippPomodoro", "Settings persisted to storage.");
+            } else {
+                FURI_LOG_E("FlippPomodoro", "Failed to persist settings to storage.");
+                // Optionally, provide user feedback about save failure here
+            }
         } else {
-            FURI_LOG_E("FlippPomodoro", "Settings view is null, cannot save settings.");
-            // Optionally, load default or last known good settings if this happens
+            FURI_LOG_E("FlippPomodoro", "Settings view is null, cannot update or save settings.");
         }
 
+        // Navigate back even if saving failed, as settings are in memory.
+        // The app will use in-memory settings; they just might not persist if saving failed.
         scene_manager_previous_scene(app->scene_manager); // Go back to Timer scene
         consumed = true;
     }
