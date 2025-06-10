@@ -67,13 +67,25 @@ void flipp_pomodoro__destroy(FlippPomodoroState *state)
 
 uint32_t flipp_pomodoro__current_stage_total_duration(FlippPomodoroState *state)
 {
-    const int32_t stage_duration_seconds_map[] = {
-        [FlippPomodoroStageFocus] = 25 * TIME_SECONDS_IN_MINUTE,
-        [FlippPomodoroStageRest] = 5 * TIME_SECONDS_IN_MINUTE,
-        [FlippPomodoroStageLongBreak] = 30 * TIME_SECONDS_IN_MINUTE,
-    };
+    PomodoroStage current_stage = flipp_pomodoro__get_stage(state);
+    uint8_t duration_minutes;
 
-    return stage_duration_seconds_map[flipp_pomodoro__get_stage(state)];
+    switch (current_stage) {
+        case FlippPomodoroStageFocus:
+            duration_minutes = state->settings.work_minutes;
+            break;
+        case FlippPomodoroStageRest:
+            duration_minutes = state->settings.short_break_minutes;
+            break;
+        case FlippPomodoroStageLongBreak:
+            duration_minutes = state->settings.long_break_minutes;
+            break;
+        default:
+            // Should not happen
+            duration_minutes = 25;
+            break;
+    }
+    return duration_minutes * TIME_SECONDS_IN_MINUTE;
 };
 
 uint32_t flipp_pomodoro__stage_expires_timestamp(FlippPomodoroState *state)
@@ -100,5 +112,24 @@ FlippPomodoroState *flipp_pomodoro__new()
     const uint32_t now = time_now();
     state->started_at_timestamp = now;
     state->current_stage_index = 0;
+
+    // Initialize settings with default values
+    state->settings.work_minutes = 25;
+    state->settings.short_break_minutes = 5;
+    state->settings.long_break_minutes = 30;
+
     return state;
 };
+
+FlippPomodoroSettings* flipp_pomodoro__get_settings(FlippPomodoroState* state) {
+    furi_assert(state);
+    return &state->settings;
+}
+
+void flipp_pomodoro__set_settings(FlippPomodoroState* state, FlippPomodoroSettings* settings) {
+    furi_assert(state);
+    furi_assert(settings);
+    state->settings.work_minutes = settings->work_minutes;
+    state->settings.short_break_minutes = settings->short_break_minutes;
+    state->settings.long_break_minutes = settings->long_break_minutes;
+}

@@ -8,6 +8,7 @@
 #include <notification/notification_messages.h>
 #include "views/flipp_pomodoro_timer_view.h"
 #include "views/flipp_pomodoro_info_view.h"
+#include "views/flipp_pomodoro_settings_view.h"
 
 #include "modules/flipp_pomodoro.h"
 #include "modules/flipp_pomodoro_statistics.h"
@@ -31,6 +32,7 @@ typedef struct
     NotificationApp *notification_app;
     FlippPomodoroTimerView *timer_view;
     FlippPomodoroInfoView *info_view;
+    FlippPomodoroSettingsView *settings_view;
     FlippPomodoroState *state;
     FlippPomodoroStatistics *statistics;
 } FlippPomodoroApp;
@@ -39,4 +41,5 @@ typedef enum
 {
     FlippPomodoroAppViewTimer,
     FlippPomodoroAppViewInfo,
+    FlippPomodoroAppViewSettings,
 } FlippPomodoroAppView;
