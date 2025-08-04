@@ -54,7 +54,7 @@ static bool config_input_callback(InputEvent* event, void* ctx) {
     View* view = ctx;
     bool handled = false;
     with_view_model(view, FlippPomodoroConfigViewModel * model, {
-        if(event->type == InputTypePress) {
+        if((event->type == InputTypePress) || (event->type == InputTypeRepeat)) {
             switch(event->key) {
                 case InputKeyUp:
                     if(model->selected > 0) model->selected--;
