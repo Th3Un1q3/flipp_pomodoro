@@ -12,6 +12,7 @@
 
 #include "modules/flipp_pomodoro.h"
 #include "modules/flipp_pomodoro_statistics.h"
+#include "modules/flipp_pomodoro_settings.h"
 
 typedef enum
 {
@@ -35,6 +36,8 @@ typedef struct
     FlippPomodoroConfigView *config_view;
     FlippPomodoroState *state;
     FlippPomodoroStatistics *statistics;
+    uint32_t paused_at_timestamp;
+    FlippPomodoroSettings settings_before;
 } FlippPomodoroApp;
 
 typedef enum
