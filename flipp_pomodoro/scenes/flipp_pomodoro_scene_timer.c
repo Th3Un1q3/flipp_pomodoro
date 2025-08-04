@@ -167,6 +167,12 @@ bool flipp_pomodoro_scene_timer_on_event(void *ctx, SceneManagerEvent event)
     case SceneManagerEventTypeBack:
         scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneInfo);
         return SceneEventConusmed;
+    case SceneManagerEventTypeKey:
+        if (event.input.type == InputTypeLong && event.input.key == InputKeyOk) {
+            scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneSettings);
+            return SceneEventConusmed;
+        }
+        break;
     default:
         break;
     };

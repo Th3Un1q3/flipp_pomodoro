@@ -11,11 +11,19 @@ typedef enum
     FlippPomodoroStageLongBreak,
 } PomodoroStage;
 
+/// @brief Settings for Pomodoro timer durations
+typedef struct {
+    uint8_t work_minutes;
+    uint8_t short_break_minutes;
+    uint8_t long_break_minutes;
+} FlippPomodoroSettings;
+
 /// @brief State of the pomodoro timer
 typedef struct
 {
     uint8_t current_stage_index;
     uint32_t started_at_timestamp;
+    FlippPomodoroSettings settings;
 } FlippPomodoroState;
 
 /// @brief Generates initial state
@@ -53,3 +61,13 @@ bool flipp_pomodoro__is_stage_expired(FlippPomodoroState *state);
 /// @brief Rotate stage of the timer
 /// @param state - pointer to the state of pomorodo.
 void flipp_pomodoro__toggle_stage(FlippPomodoroState *state);
+
+/// @brief Get current timer settings
+/// @param state - pointer to the state of pomorodo.
+/// @returns Pointer to the FlippPomodoroSettings struct
+FlippPomodoroSettings* flipp_pomodoro__get_settings(FlippPomodoroState* state);
+
+/// @brief Set new timer settings
+/// @param state - pointer to the state of pomorodo.
+/// @param settings - pointer to the new FlippPomodoroSettings struct
+void flipp_pomodoro__set_settings(FlippPomodoroState* state, FlippPomodoroSettings* settings);
