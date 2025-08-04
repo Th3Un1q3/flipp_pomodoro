@@ -1,4 +1,5 @@
 #include "flipp_pomodoro_config_view.h"
+#include "../modules/flipp_pomodoro_settings.h"
 #include <furi.h>
 #include <gui/view.h>
 #include <gui/canvas.h>
@@ -11,6 +12,9 @@ typedef struct {
 struct FlippPomodoroConfigView {
     View* view;
 };
+
+// Глобально настройки (используются везде)
+static FlippPomodoroSettings settings;
 
 static void config_draw_callback(Canvas* canvas, void* ctx) {
     FlippPomodoroConfigViewModel* model = ctx;
@@ -74,6 +78,11 @@ static bool config_input_callback(InputEvent* event, void* ctx) {
                     break;
                 default: break;
             }
+            // Сохраняем настройки при каждом изменении
+            settings.focus_minutes = model->durations[0];
+            settings.short_break_minutes = model->durations[1];
+            settings.long_break_minutes = model->durations[2];
+            flipp_pomodoro_settings_save(&settings);
         }
     }, true);
     return handled;
@@ -88,10 +97,14 @@ FlippPomodoroConfigView* flipp_pomodoro_view_config_alloc() {
     view_set_input_callback(config->view, config_input_callback);
 
     with_view_model(config->view, FlippPomodoroConfigViewModel * model, {
+        // Загружаем настройки из файла, если есть
+        if(!flipp_pomodoro_settings_load(&settings)) {
+            flipp_pomodoro_settings_set_default(&settings);
+        }
         model->selected = 0;
-        model->durations[0] = 25; // Focus
-        model->durations[1] = 5;  // Short Break
-        model->durations[2] = 30; // Long Break
+        model->durations[0] = settings.focus_minutes;
+        model->durations[1] = settings.short_break_minutes;
+        model->durations[2] = settings.long_break_minutes;
     }, false);
 
     return config;
