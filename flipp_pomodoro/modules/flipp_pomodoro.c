@@ -102,3 +102,7 @@ FlippPomodoroState *flipp_pomodoro__new()
     state->current_stage_index = 0;
     return state;
 };
+
+const char* flipp_pomodoro__settings_button_label() {
+    return "Settings";
+}

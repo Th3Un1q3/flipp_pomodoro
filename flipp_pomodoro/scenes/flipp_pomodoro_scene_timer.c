@@ -78,6 +78,11 @@ void flipp_pomodoro_scene_timer_on_next_stage(void *ctx)
         FlippPomodoroAppCustomEventStageSkip);
 };
 
+void flipp_pomodoro_scene_timer_on_left(void* ctx) {
+    FlippPomodoroApp* app = ctx;
+    scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneConfig);
+}
+
 void flipp_pomodoro_scene_timer_on_ask_hint(void *ctx)
 {
     FlippPomodoroApp *app = ctx;
@@ -108,8 +113,12 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
         flipp_pomodoro_scene_timer_on_ask_hint);
 
     flipp_pomodoro_view_timer_set_on_right_cb(
-        app->timer_view,
-        flipp_pomodoro_scene_timer_on_next_stage);
+         app->timer_view,
+         flipp_pomodoro_scene_timer_on_next_stage);
+
+     flipp_pomodoro_view_timer_set_on_left_cb(
+          app->timer_view,
+          flipp_pomodoro_scene_timer_on_left);
 };
 
 char *flipp_pomodoro_scene_timer_get_contextual_hint(FlippPomodoroApp *app)
@@ -147,7 +156,6 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
             flipp_pomodoro_scene_timer_get_contextual_hint(app));
         break;
     default:
-        // optional: code to be executed if custom_event doesn't match any cases
         break;
     }
 };

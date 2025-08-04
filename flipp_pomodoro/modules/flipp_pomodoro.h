@@ -53,3 +53,5 @@ bool flipp_pomodoro__is_stage_expired(FlippPomodoroState *state);
 /// @brief Rotate stage of the timer
 /// @param state - pointer to the state of pomorodo.
 void flipp_pomodoro__toggle_stage(FlippPomodoroState *state);
+
+const char* flipp_pomodoro__settings_button_label();
