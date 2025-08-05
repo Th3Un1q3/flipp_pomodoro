@@ -13,7 +13,7 @@ static void flipp_pomodoro_scene_config_on_save(void* ctx) {
     FlippPomodoroSettings s_now;
     flipp_pomodoro_view_config_get_settings(app->config_view, &s_now);
     flipp_pomodoro_settings_save(&s_now);
-    // сразу применяем к таймерам
+    // immediately apply to timers
     flipp_pomodoro__apply_settings(&s_now);
 
     scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneTimer);

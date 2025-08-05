@@ -104,7 +104,7 @@ void flipp_pomodoro_app_free(FlippPomodoroApp *app)
 {
     view_dispatcher_remove_view(app->view_dispatcher, FlippPomodoroAppViewTimer);
     view_dispatcher_remove_view(app->view_dispatcher, FlippPomodoroAppViewInfo);
-    view_dispatcher_remove_view(app->view_dispatcher, FlippPomodoroAppViewConfig); // <--- ДОБАВЬ ЭТУ СТРОКУ
+    view_dispatcher_remove_view(app->view_dispatcher, FlippPomodoroAppViewConfig);
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
     flipp_pomodoro_view_timer_free(app->timer_view);

@@ -33,7 +33,7 @@ static bool flipp_pomodoro_settings_try_load_from(File* file, const char* path, 
             settings->focus_minutes = v1->focus_minutes;
             settings->short_break_minutes = v1->short_break_minutes;
             settings->long_break_minutes = v1->long_break_minutes;
-            settings->buzz_mode = FlippPomodoroBuzzOnce; // апгрейд по умолчанию
+            settings->buzz_mode = FlippPomodoroBuzzOnce; // upgrade by default
             ok = true;
         }
         storage_file_close(file);
@@ -60,7 +60,7 @@ bool flipp_pomodoro_settings_save(const FlippPomodoroSettings* settings) {
     Storage* storage = furi_record_open("storage");
     File* file = storage_file_alloc(storage);
 
-    // гарантируем наличие каталога apps_data/flipp_pomodoro
+    // ensure the dir exist
     storage_common_mkdir(storage, SETTINGS_DIR);
 
     bool ok = false;
