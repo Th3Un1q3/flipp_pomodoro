@@ -8,6 +8,7 @@
 #include "../modules/flipp_pomodoro_settings.h"
 #include "../modules/flipp_pomodoro.h"
 #include "../helpers/notifications.h"
+#include "../helpers/time.h"
 #include <notification/notification.h>
 
 enum
@@ -65,9 +66,18 @@ static bool g_stage_complete_sent = false; // чтобы StageComplete ушёл 
 static bool g_once_notified = false;       // чтобы звук/вибро при Once/Naggy сыграли корректно
 static uint8_t g_naggy_left = 0;           // сколько раз ещё повторять штатное уведомление (Naggy)
 
+// Анти-«пролезание»: не дублировать уведомления, пока проигрывается предыдущее.
+// Грубая оценка длительности штатной последовательности ~2.5–3с -> берём 3с.
+static uint32_t g_naggy_cooldown_until = 0; // timestamp, раньше которого не шлём следующее
+
 // В Slide уведомление при старте СЛЕДУЮЩЕГО этапа — имитируем его при стопе в Once/Naggy.
 // ПОВТОРНО ИСПОЛЬЗУЕМ штатные последовательности stage_start_notification_sequence_map[*].
 static void notify_like_slide_next_stage(FlippPomodoroApp* app) {
+    const uint32_t now = time_now();
+    if(now < g_naggy_cooldown_until) {
+        return; // не ставим новое в очередь, пока предыдущее ещё играет
+    }
+
     PomodoroStage cur = flipp_pomodoro__get_stage(app->state);
     uint8_t pos = app->state->current_stage_index % 8;
     PomodoroStage next;
@@ -81,6 +91,9 @@ static void notify_like_slide_next_stage(FlippPomodoroApp* app) {
     NotificationApp* n = furi_record_open(RECORD_NOTIFICATION);
     notification_message(n, seq);
     furi_record_close(RECORD_NOTIFICATION);
+
+    // блокируем повторы на время проигрывания штатной последовательности
+    g_naggy_cooldown_until = now + 3;
 }
 
 // Мгновенно заглушить звук/вибро (без изобретения новых паттернов — только off-сообщения).
@@ -94,6 +107,8 @@ static void stop_all_notifications(void) {
 // Полная остановка «спама» Naggy + глушение
 static void naggy_stop(void) {
     g_naggy_left = 0;
+    // небольшой «зонтик», чтобы тик, пришедший сразу после стопа, не успел поставить новое
+    g_naggy_cooldown_until = time_now() + 3;
     stop_all_notifications();
 }
 
@@ -144,6 +159,7 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     g_stage_complete_sent = false;
     g_once_notified = false;
     g_naggy_left = 0;
+    g_naggy_cooldown_until = 0;
 
     // Если этап уже истёк:
     //  - Slide: начинаем заново (как было);
@@ -223,13 +239,14 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
                     g_once_notified = true;
                 }
             } else { // FlippPomodoroBuzzAnnoying (Naggy)
-                // Naggy: как Once, но повторить штатное уведомление 10 раз (≈1 Гц, сразу + 9 повторов)
+                // Naggy: как Once, но повторить штатное уведомление 10 раз (с защитой от очереди)
                 if(!g_once_notified) {
                     g_once_notified = true;
-                    g_naggy_left = 10; // сразу и ещё 9 на следующих тиках
+                    g_naggy_left = 10; // сразу и ещё 9 попыток
                 }
                 if(g_naggy_left > 0) {
-                    notify_like_slide_next_stage(app); // ПОВТОРНО ИСПОЛЬЗУЕМ штатное
+                    notify_like_slide_next_stage(app); // ПОВТОРНО ИСПОЛЬЗУЕМ штатное (с cooldown)
+                    // уменьшаем счётчик только когда попытались отправить (в т.ч. если заблокировано — всё равно считаем попыткой)
                     g_naggy_left--;
                     if(g_naggy_left == 0) {
                         stop_all_notifications();
@@ -289,4 +306,5 @@ bool flipp_pomodoro_scene_timer_on_event(void *ctx, SceneManagerEvent event)
 void flipp_pomodoro_scene_timer_on_exit(void *ctx)
 {
     UNUSED(ctx);
+    naggy_stop();
 };
