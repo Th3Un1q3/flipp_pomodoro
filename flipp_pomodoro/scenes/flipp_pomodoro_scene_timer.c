@@ -5,6 +5,7 @@
 #include "flipp_pomodoro_scene.h"
 #include "../flipp_pomodoro_app.h"
 #include "../views/flipp_pomodoro_timer_view.h"
+#include "../modules/flipp_pomodoro_settings.h"
 
 enum
 {
@@ -142,9 +143,18 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
     case FlippPomodoroAppCustomEventTimerTick:
         if (flipp_pomodoro__is_stage_expired(app->state))
         {
-            view_dispatcher_send_custom_event(
-                app->view_dispatcher,
-                FlippPomodoroAppCustomEventStageComplete);
+            FlippPomodoroSettings s;
+            if(!flipp_pomodoro_settings_load(&s)) {
+                flipp_pomodoro_settings_set_default(&s);
+            }
+            // Slide -> old logic
+            // Once  -> freeze
+            if (s.buzz_mode == FlippPomodoroBuzzSlide) {
+                view_dispatcher_send_custom_event(
+                    app->view_dispatcher,
+                    FlippPomodoroAppCustomEventStageComplete);
+            }
+            // else: do nothing (freeze at current view/time)
         }
         break;
     case FlippPomodoroAppCustomEventStateUpdated:
