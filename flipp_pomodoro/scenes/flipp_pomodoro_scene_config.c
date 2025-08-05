@@ -3,23 +3,42 @@
 #include "flipp_pomodoro_scene.h"
 #include "../helpers/time.h"
 #include "../modules/flipp_pomodoro_settings.h"
+#include "../views/flipp_pomodoro_config_view.h"
 #include <string.h>
+
+static void flipp_pomodoro_scene_config_on_save(void* ctx) {
+    FlippPomodoroApp* app = ctx;
+
+    FlippPomodoroSettings s_now;
+    flipp_pomodoro_view_config_get_settings(app->config_view, &s_now);
+    flipp_pomodoro_settings_save(&s_now);
+
+    scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneTimer);
+}
 
 void flipp_pomodoro_scene_config_on_enter(void* ctx) {
     FlippPomodoroApp* app = ctx;
     app->paused_at_timestamp = time_now();
+
     FlippPomodoroSettings s;
     if(!flipp_pomodoro_settings_load(&s)) {
         flipp_pomodoro_settings_set_default(&s);
     }
     app->settings_before = s;
+
+    // Заполняем модель вью значениями из файла (RAM)
+    flipp_pomodoro_view_config_set_settings(app->config_view, &s);
+
+    // Save по центру
+    flipp_pomodoro_view_config_set_on_save_cb(app->config_view, flipp_pomodoro_scene_config_on_save, app);
+
     view_dispatcher_switch_to_view(app->view_dispatcher, FlippPomodoroAppViewConfig);
 }
-
 
 bool flipp_pomodoro_scene_config_on_event(void* ctx, SceneManagerEvent event) {
     FlippPomodoroApp* app = ctx;
     if(event.type == SceneManagerEventTypeBack) {
+        // Ничего не сохраняем
         scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneTimer);
         return true;
     }
