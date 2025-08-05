@@ -76,6 +76,7 @@ FlippPomodoroApp *flipp_pomodoro_app_alloc()
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, flipp_pomodoro_app_back_event_callback);
 
+    app->config_view = flipp_pomodoro_view_config_alloc();
     app->timer_view = flipp_pomodoro_view_timer_alloc();
     app->info_view = flipp_pomodoro_info_view_alloc();
 
@@ -89,6 +90,11 @@ FlippPomodoroApp *flipp_pomodoro_app_alloc()
         FlippPomodoroAppViewInfo,
         flipp_pomodoro_info_view_get_view(app->info_view));
 
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        FlippPomodoroAppViewConfig,
+        flipp_pomodoro_view_config_get_view(app->config_view));
+
     scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneTimer);
     FURI_LOG_I(TAG, "Alloc complete");
     return app;
@@ -98,9 +104,11 @@ void flipp_pomodoro_app_free(FlippPomodoroApp *app)
 {
     view_dispatcher_remove_view(app->view_dispatcher, FlippPomodoroAppViewTimer);
     view_dispatcher_remove_view(app->view_dispatcher, FlippPomodoroAppViewInfo);
+    view_dispatcher_remove_view(app->view_dispatcher, FlippPomodoroAppViewConfig);
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
     flipp_pomodoro_view_timer_free(app->timer_view);
+    flipp_pomodoro_view_config_free(app->config_view);
     flipp_pomodoro_info_view_free(app->info_view);
     flipp_pomodoro_statistics__destroy(app->statistics);
     flipp_pomodoro__destroy(app->state);
@@ -108,6 +116,7 @@ void flipp_pomodoro_app_free(FlippPomodoroApp *app)
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);
 };
+
 
 int32_t flipp_pomodoro_app(void *p)
 {

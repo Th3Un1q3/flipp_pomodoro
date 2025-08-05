@@ -66,6 +66,28 @@ Do the following:
 * Answer pending messages
 * Talk to a colleague
 
+### `Settings`
+![Settings Screen](docs/settings.png)
+
+#### About the Menu
+All settings are persistent — they are saved automatically and reloaded when the app restarts.  
+You can exit the settings menu without saving changes if needed.  
+Entering the settings menu will pause any active timer — use this intentionally, as excessive use breaks the spirit of the Pomodoro technique.
+
+#### Available Settings
+You can configure:
+
+- Focus time
+- Short break
+- Long break
+- Notification mode (`Buzz Mode`)
+
+#### Buzz Modes
+- **Slide** — Notifies you and immediately starts the next timer.
+- **Once** — Notifies you once, then waits for manual confirmation.
+- **Naggy** — Sends 10 consecutive alerts until you press the center button, open the settings menu, or start a new timer manually.
+
+
 ## Contributing
 
 [![GitHub Discussions](https://img.shields.io/github/discussions/Th3Un1q3/flipp_pomodoro?style=for-the-badge)](https://github.com/Th3Un1q3/flipp_pomodoro/discussions)

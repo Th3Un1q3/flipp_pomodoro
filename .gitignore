@@ -1,1 +1,6 @@
 dist
+.standard-firmware
+.unleashed-firmware
+.DS_STORE/
+.DS_Store
+/.idea
