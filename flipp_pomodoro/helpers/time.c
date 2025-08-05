@@ -2,7 +2,7 @@
 #include <furi_hal.h>
 #include "time.h"
 
-const int TIME_SECONDS_IN_MINUTE = 60;
+const int TIME_SECONDS_IN_MINUTE = 5; // FIXME dont forget set 60
 const int TIME_MINUTES_IN_HOUR = 60;
 
 uint32_t time_now()

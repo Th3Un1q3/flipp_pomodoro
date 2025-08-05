@@ -32,6 +32,7 @@ typedef struct
     size_t scroll_counter;
     char *current_hint;
     uint32_t hint_open_timestamp;
+    bool awaiting_continue; // показывать центральную кнопку "Continue"
 } FlippPomodoroTimerViewModel;
 
 static const Icon *stage_background_image[] = {
@@ -101,16 +102,20 @@ static void draw_str_with_drop_shadow(
         str);
 }
 
-static void flipp_pomodoro_view_timer_draw_current_stage_label(Canvas *canvas, FlippPomodoroState *state)
+// В правом верхнем углу: статус стадии или "Paused..." при ожидании Continue (Once)
+static void flipp_pomodoro_view_timer_draw_current_stage_label(Canvas *canvas, FlippPomodoroTimerViewModel *model)
 {
     canvas_set_font(canvas, FontPrimary);
+    const char* label = model->awaiting_continue
+        ? "Paused..."
+        : flipp_pomodoro__current_stage_label(model->state);
     draw_str_with_drop_shadow(
         canvas,
         canvas_width(canvas),
         0,
         AlignRight,
         AlignTop,
-        flipp_pomodoro__current_stage_label(state));
+        label);
 }
 
 static void flipp_pomodoro_view_timer_draw_hint(Canvas *canvas, FlippPomodoroTimerViewModel *model)
@@ -181,7 +186,7 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas *canvas, void *_model
         canvas,
         flipp_pomodoro__stage_remaining_duration(model->state));
 
-    flipp_pomodoro_view_timer_draw_current_stage_label(canvas, model->state);
+    flipp_pomodoro_view_timer_draw_current_stage_label(canvas, model);
 
     canvas_set_color(canvas, ColorBlack);
 
@@ -189,6 +194,10 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas *canvas, void *_model
     elements_button_right(canvas, flipp_pomodoro__next_stage_label(model->state));
     flipp_pomodoro_view_timer_draw_hint(canvas, model);
     elements_button_left(canvas, flipp_pomodoro__settings_button_label());
+
+    if(model->awaiting_continue) {
+        elements_button_center(canvas, "Continue");
+    }
 };
 
 bool flipp_pomodoro_view_timer_input_callback(InputEvent *event, void *ctx)
@@ -273,6 +282,7 @@ FlippPomodoroTimerView *flipp_pomodoro_view_timer_alloc()
         FlippPomodoroTimerViewModel * model,
         {
             model->scroll_counter = 0;
+            model->awaiting_continue = false;
         },
         false);
 
@@ -334,4 +344,14 @@ void flipp_pomodoro_view_timer_set_on_left_cb(FlippPomodoroTimerView *timer, Fli
     furi_assert(timer);
     furi_assert(left_cb);
     timer->left_cb = left_cb;
+}
+
+void flipp_pomodoro_view_timer_set_await_continue(View* view, bool awaiting) {
+    with_view_model(
+        view,
+        FlippPomodoroTimerViewModel * model,
+        {
+            model->awaiting_continue = awaiting;
+        },
+        true);
 }

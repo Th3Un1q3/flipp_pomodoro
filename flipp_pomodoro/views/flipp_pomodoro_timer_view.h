@@ -25,3 +25,5 @@ void flipp_pomodoro_view_timer_display_hint(View *view, char *hint);
 
 void flipp_pomodoro_view_timer_set_on_left_cb(FlippPomodoroTimerView *timer, FlippPomodoroTimerViewInputCb left_cb);
 
+// Показывать/скрывать стандартную центральную кнопку "Continue"
+void flipp_pomodoro_view_timer_set_await_continue(View* view, bool awaiting);

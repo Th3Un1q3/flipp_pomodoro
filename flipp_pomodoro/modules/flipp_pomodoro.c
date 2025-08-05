@@ -112,8 +112,8 @@ TimeDifference flipp_pomodoro__stage_remaining_duration(FlippPomodoroState *stat
 bool flipp_pomodoro__is_stage_expired(FlippPomodoroState *state)
 {
     const uint32_t expired_by = flipp_pomodoro__stage_expires_timestamp(state);
-    const uint8_t seamless_change_span_seconds = 1;
-    return (time_now() - seamless_change_span_seconds) >= expired_by;
+    // точное срабатывание без «съедания» секунды
+    return time_now() >= expired_by;
 };
 
 FlippPomodoroState *flipp_pomodoro__new()

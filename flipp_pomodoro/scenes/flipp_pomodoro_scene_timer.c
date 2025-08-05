@@ -60,11 +60,13 @@ static char *random_string_of_list(char **hints, size_t num_hints)
     return hints[random_index];
 }
 
-// чтобы не «пиликать» на каждом тике после истечения
-static bool g_stage_expired_notified = false;
+// анти-дубли
+static bool g_stage_complete_sent = false; // чтобы StageComplete ушёл один раз
+static bool g_once_prompt_shown = false;   // чтобы центр "Continue" показать один раз
+static bool g_once_notified = false;       // чтобы звук/вибро при Once сыграть один раз
 
 static void notify_like_slide_next_stage(FlippPomodoroApp* app) {
-    // В Slide уведомление играет при старте СЛЕДУЮЩЕГО этапа.
+    // В Slide уведомление при старте СЛЕДУЮЩЕГО этапа — имитируем его при стопе в Once
     PomodoroStage cur = flipp_pomodoro__get_stage(app->state);
     PomodoroStage next = (cur == FlippPomodoroStageFocus) ? FlippPomodoroStageRest : FlippPomodoroStageFocus;
     const NotificationSequence* seq = stage_start_notification_sequence_map[next];
@@ -96,6 +98,15 @@ void flipp_pomodoro_scene_timer_on_next_stage(void *ctx)
         FlippPomodoroAppCustomEventStageSkip);
 };
 
+static void flipp_pomodoro_scene_timer_on_continue(void* ctx) {
+    // После Once: перейти БЕЗ доп. уведомления -> используем StageSkip (обычно без звука)
+    FlippPomodoroApp* app = ctx;
+    g_once_prompt_shown = false;
+    view_dispatcher_send_custom_event(
+        app->view_dispatcher,
+        FlippPomodoroAppCustomEventStageSkip);
+}
+
 void flipp_pomodoro_scene_timer_on_left(void* ctx) {
     FlippPomodoroApp* app = ctx;
     scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneConfig);
@@ -114,7 +125,9 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     furi_assert(ctx);
 
     FlippPomodoroApp *app = ctx;
-    g_stage_expired_notified = false;
+    g_stage_complete_sent = false;
+    g_once_prompt_shown = false;
+    g_once_notified = false;
 
     if (flipp_pomodoro__is_stage_expired(app->state))
     {
@@ -127,6 +140,9 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
 
     flipp_pomodoro_view_timer_set_callback_context(app->timer_view, app);
 
+    // по умолчанию центр — подсказка
+    flipp_pomodoro_view_timer_set_await_continue(
+        flipp_pomodoro_view_timer_get_view(app->timer_view), false);
     flipp_pomodoro_view_timer_set_on_ok_cb(
         app->timer_view,
         flipp_pomodoro_scene_timer_on_ask_hint);
@@ -166,27 +182,55 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
             if(!flipp_pomodoro_settings_load(&s)) {
                 flipp_pomodoro_settings_set_default(&s);
             }
-            // Slide -> как раньше: перейти на следующий этап/вью
             if (s.buzz_mode == FlippPomodoroBuzzSlide) {
-                g_stage_expired_notified = false; // следующий этап сам решит уведомления
-                view_dispatcher_send_custom_event(
-                    app->view_dispatcher,
-                    FlippPomodoroAppCustomEventStageComplete);
+                // авто-переход (однократно)
+                if(!g_stage_complete_sent) {
+                    g_stage_complete_sent = true;
+                    view_dispatcher_send_custom_event(
+                        app->view_dispatcher,
+                        FlippPomodoroAppCustomEventStageComplete);
+                }
             } else {
-                // Once -> не переключаемся/не рестартим, но ОДИН РАЗ «пиликаем» как в Slide
-                if(!g_stage_expired_notified) {
+                // Once: стоп на 00:00; один раз звук/вибро СЕЙЧАС; показать "Continue" на центре
+                if(!g_once_notified) {
                     notify_like_slide_next_stage(app);
-                    g_stage_expired_notified = true;
+                    g_once_notified = true;
+                }
+                if(!g_once_prompt_shown) {
+                    g_once_prompt_shown = true;
+                    flipp_pomodoro_view_timer_set_await_continue(
+                        flipp_pomodoro_view_timer_get_view(app->timer_view), true);
+                    flipp_pomodoro_view_timer_set_on_ok_cb(
+                        app->timer_view,
+                        flipp_pomodoro_scene_timer_on_continue);
                 }
             }
         } else {
-            // сбросить флаг при любом "не истек" (после скипа/старта нового этапа)
-            g_stage_expired_notified = false;
+            // активный этап — вернуть обычный центр и сбросить флаги
+            if(g_once_prompt_shown) {
+                flipp_pomodoro_view_timer_set_await_continue(
+                    flipp_pomodoro_view_timer_get_view(app->timer_view), false);
+                flipp_pomodoro_view_timer_set_on_ok_cb(
+                    app->timer_view,
+                    flipp_pomodoro_scene_timer_on_ask_hint);
+            }
+            g_once_prompt_shown = false;
+            g_stage_complete_sent = false;
+            g_once_notified = false;
         }
         break;
     }
     case FlippPomodoroAppCustomEventStateUpdated:
         flipp_pomodoro_scene_timer_sync_view_state(app);
+        // после смены этапа — обычный центр и чистые флаги
+        flipp_pomodoro_view_timer_set_await_continue(
+            flipp_pomodoro_view_timer_get_view(app->timer_view), false);
+        flipp_pomodoro_view_timer_set_on_ok_cb(
+            app->timer_view,
+            flipp_pomodoro_scene_timer_on_ask_hint);
+        g_stage_complete_sent = false;
+        g_once_prompt_shown = false;
+        g_once_notified = false;
         break;
     case FlippPomodoroAppCustomEventTimerAskHint:
         flipp_pomodoro_view_timer_display_hint(
