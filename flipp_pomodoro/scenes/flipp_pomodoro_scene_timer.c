@@ -125,10 +125,22 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     g_stage_complete_sent = false;
     g_once_notified = false;
 
+    // Если этап уже истёк:
+    //  - Slide: начинаем заново (как было);
+    //  - Once: остаёмся на 00:00 и НЕ переуведомляем после возврата.
     if (flipp_pomodoro__is_stage_expired(app->state))
     {
-        flipp_pomodoro__destroy(app->state);
-        app->state = flipp_pomodoro__new();
+        FlippPomodoroSettings s;
+        if(!flipp_pomodoro_settings_load(&s)) {
+            flipp_pomodoro_settings_set_default(&s);
+        }
+        if(s.buzz_mode != FlippPomodoroBuzzOnce) {
+            flipp_pomodoro__destroy(app->state);
+            app->state = flipp_pomodoro__new();
+        } else {
+            // подавить повторное уведомление на первом тике после возврата
+            g_once_notified = true;
+        }
     }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlippPomodoroAppViewTimer);
