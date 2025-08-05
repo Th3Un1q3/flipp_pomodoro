@@ -10,17 +10,17 @@ FlippPomodoroConfigView* flipp_pomodoro_view_config_alloc();
 View* flipp_pomodoro_view_config_get_view(FlippPomodoroConfigView* view);
 void flipp_pomodoro_view_config_free(FlippPomodoroConfigView* view);
 
-// Установить значения в модель (из файла на входе в сцену)
+// From config file to screen
 void flipp_pomodoro_view_config_set_settings(
     FlippPomodoroConfigView* view,
     const FlippPomodoroSettings* in);
 
-// Получить текущие значения из модели (для Save)
+// Config from ram for save btn
 void flipp_pomodoro_view_config_get_settings(
     FlippPomodoroConfigView* view,
     FlippPomodoroSettings* out);
 
-// Кнопка Save (центральная)
+// Save
 void flipp_pomodoro_view_config_set_on_save_cb(
     FlippPomodoroConfigView* view,
     FlippPomodoroConfigViewActionCb cb,

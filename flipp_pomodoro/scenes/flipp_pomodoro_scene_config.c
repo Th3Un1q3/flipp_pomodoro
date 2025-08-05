@@ -26,10 +26,10 @@ void flipp_pomodoro_scene_config_on_enter(void* ctx) {
     }
     app->settings_before = s;
 
-    // Заполняем модель вью значениями из файла (RAM)
+    // ram data to view
     flipp_pomodoro_view_config_set_settings(app->config_view, &s);
 
-    // Save по центру
+    // Save at center
     flipp_pomodoro_view_config_set_on_save_cb(app->config_view, flipp_pomodoro_scene_config_on_save, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlippPomodoroAppViewConfig);
@@ -38,7 +38,7 @@ void flipp_pomodoro_scene_config_on_enter(void* ctx) {
 bool flipp_pomodoro_scene_config_on_event(void* ctx, SceneManagerEvent event) {
     FlippPomodoroApp* app = ctx;
     if(event.type == SceneManagerEventTypeBack) {
-        // Ничего не сохраняем
+        // when Back -> nothing to save
         scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneTimer);
         return true;
     }

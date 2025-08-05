@@ -5,10 +5,17 @@
 
 #define SETTINGS_PATH "/ext/flipp_pomodoro_settings.bin"
 
+typedef struct {
+    uint8_t focus_minutes;
+    uint8_t short_break_minutes;
+    uint8_t long_break_minutes;
+} FlippPomodoroSettingsV1;
+
 void flipp_pomodoro_settings_set_default(FlippPomodoroSettings* settings) {
     settings->focus_minutes = 25;
     settings->short_break_minutes = 5;
     settings->long_break_minutes = 30;
+    settings->buzz_mode = FlippPomodoroBuzzOnce;
 }
 
 bool flipp_pomodoro_settings_load(FlippPomodoroSettings* settings) {
@@ -17,7 +24,18 @@ bool flipp_pomodoro_settings_load(FlippPomodoroSettings* settings) {
 
     bool ok = false;
     if(storage_file_open(file, SETTINGS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        if(storage_file_read(file, settings, sizeof(FlippPomodoroSettings)) == sizeof(FlippPomodoroSettings)) {
+        uint8_t buf[sizeof(FlippPomodoroSettings)] = {0};
+        uint32_t n = storage_file_read(file, buf, sizeof(FlippPomodoroSettings));
+
+        if(n == sizeof(FlippPomodoroSettings)) {
+            memcpy(settings, buf, sizeof(FlippPomodoroSettings));
+            ok = true;
+        } else if(n == sizeof(FlippPomodoroSettingsV1)) {
+            const FlippPomodoroSettingsV1* v1 = (const FlippPomodoroSettingsV1*)buf;
+            settings->focus_minutes = v1->focus_minutes;
+            settings->short_break_minutes = v1->short_break_minutes;
+            settings->long_break_minutes = v1->long_break_minutes;
+            settings->buzz_mode = FlippPomodoroBuzzOnce; // апгрейд по умолчанию
             ok = true;
         }
         storage_file_close(file);

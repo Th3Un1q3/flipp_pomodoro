@@ -6,8 +6,9 @@
 #include <gui/elements.h>
 
 typedef struct {
-    uint8_t selected;     // 0: focus, 1: short break, 2: long break
-    uint8_t durations[3]; // минуты, только на экране (RAM)
+    uint8_t selected;     // 0: focus, 1: short break, 2: long break, 3: long break
+    uint8_t durations[3]; // min at screen only (RAM)
+    uint8_t buzz_mode;    // FlippPomodoroBuzzMode (RAM)
 } FlippPomodoroConfigViewModel;
 
 struct FlippPomodoroConfigView {
@@ -16,23 +17,36 @@ struct FlippPomodoroConfigView {
     void* cb_ctx;
 };
 
+static const char* buzz_mode_to_str(uint8_t m) {
+    switch(m) {
+        case FlippPomodoroBuzzSlide: return "Slide";
+        case FlippPomodoroBuzzOnce: return "Once";
+        case FlippPomodoroBuzzAnnoying: return "Naggy";
+        default: return "?";
+    }
+}
+
 static void config_draw_callback(Canvas* canvas, void* ctx) {
     FlippPomodoroConfigViewModel* model = ctx;
     canvas_clear(canvas);
 
-    const char* labels[3] = {"Focus:", "Short Break:", "Long Break:"};
-    for(uint8_t i = 0; i < 3; i++) {
+    const char* labels[4] = {"Focus:", "Short Break:", "Long Break:", "Buzz Mode:"};
+
+    const uint8_t y_base = 14;
+    const uint8_t row_h = 14;
+
+    for(uint8_t i = 0; i < 4; i++) {
         bool sel = (i == model->selected);
 
-        uint8_t x_label = 10;
-        uint8_t y = 18 + 20 * i;
-        uint8_t x_left = 73;
-        uint8_t x_val = 79;
-        uint8_t x_right = 115;
+        uint8_t x_label = 6 + 4;
+        uint8_t y = y_base + row_h * i;
+        uint8_t x_left = 70;
+        uint8_t x_val = 78;
+        uint8_t x_right = 118;
 
         if(sel) {
             canvas_set_color(canvas, ColorBlack);
-            canvas_draw_box(canvas, 6, y - 10, 118, 18);
+            canvas_draw_box(canvas, 6, y - 9, 118, 16);
             canvas_set_color(canvas, ColorWhite);
         } else {
             canvas_set_color(canvas, ColorBlack);
@@ -42,9 +56,13 @@ static void config_draw_callback(Canvas* canvas, void* ctx) {
         canvas_draw_str(canvas, x_label, y, labels[i]);
         canvas_draw_str(canvas, x_left, y, "<");
 
-        char val_buf[8];
-        snprintf(val_buf, sizeof(val_buf), "%2u min", model->durations[i]);
-        canvas_draw_str(canvas, x_val, y, val_buf);
+        if(i < 3) {
+            char val_buf[8];
+            snprintf(val_buf, sizeof(val_buf), "%2u min", model->durations[i]);
+            canvas_draw_str(canvas, x_val, y, val_buf);
+        } else {
+            canvas_draw_str(canvas, x_val, y, buzz_mode_to_str(model->buzz_mode));
+        }
 
         canvas_draw_str(canvas, x_right, y, ">");
     }
@@ -65,15 +83,23 @@ static bool config_input_callback(InputEvent* event, void* ctx) {
                     handled = true;
                     break;
                 case InputKeyDown:
-                    if(model->selected < 2) model->selected++;
+                    if(model->selected < 3) model->selected++;
                     handled = true;
                     break;
                 case InputKeyRight:
-                    if(model->durations[model->selected] < 99) model->durations[model->selected]++;
+                    if(model->selected < 3) {
+                        if(model->durations[model->selected] < 99) model->durations[model->selected]++;
+                    } else {
+                        model->buzz_mode = (model->buzz_mode + 1) % 3;
+                    }
                     handled = true;
                     break;
                 case InputKeyLeft:
-                    if(model->durations[model->selected] > 1) model->durations[model->selected]--;
+                    if(model->selected < 3) {
+                        if(model->durations[model->selected] > 1) model->durations[model->selected]--;
+                    } else {
+                        model->buzz_mode = (model->buzz_mode + 2) % 3;
+                    }
                     handled = true;
                     break;
                 case InputKeyOk:
@@ -105,6 +131,7 @@ FlippPomodoroConfigView* flipp_pomodoro_view_config_alloc() {
         model->durations[0] = 0;
         model->durations[1] = 0;
         model->durations[2] = 0;
+        model->buzz_mode = FlippPomodoroBuzzOnce;
     }, false);
 
     return config;
@@ -137,6 +164,7 @@ void flipp_pomodoro_view_config_set_settings(
         model->durations[0] = in->focus_minutes;
         model->durations[1] = in->short_break_minutes;
         model->durations[2] = in->long_break_minutes;
+        model->buzz_mode = in->buzz_mode;
     }, true);
 }
 
@@ -149,5 +177,6 @@ void flipp_pomodoro_view_config_get_settings(
         out->focus_minutes = model->durations[0];
         out->short_break_minutes = model->durations[1];
         out->long_break_minutes = model->durations[2];
+        out->buzz_mode = model->buzz_mode;
     }, false);
 }
