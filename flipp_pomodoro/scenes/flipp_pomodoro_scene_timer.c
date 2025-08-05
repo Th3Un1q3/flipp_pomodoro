@@ -24,21 +24,21 @@ static char *random_string_of_list(char **hints, size_t num_hints)
     return hints[random_index];
 }
 
-// анти-дубли
-static bool g_stage_complete_sent = false; // чтобы StageComplete ушёл один раз
-static bool g_once_notified = false;       // чтобы звук/вибро при Once/Naggy сыграли корректно
-static uint8_t g_naggy_left = 0;           // сколько раз ещё повторять штатное уведомление (Naggy)
+// anti duplicates
+static bool g_stage_complete_sent = false; // StageComplete sent only once
+static bool g_once_notified = false;       // notif Once/Naggy corrects
+static uint8_t g_naggy_left = 0;           // counter for Naggy
 
-// Анти-«пролезание»: не дублировать уведомления, пока проигрывается предыдущее.
-// Грубая оценка длительности штатной последовательности ~2.5–3с -> берём 3с.
-static uint32_t g_naggy_cooldown_until = 0; // timestamp, раньше которого не шлём следующее
+// Do not duplicate notifications while the previous one is playing.
+// Rough estimate of the duration of the standard sequence ~2.5–3s -> we take 3s.
+static uint32_t g_naggy_cooldown_until = 0; // timestamp, before which we do not send the next one
 
-// В Slide уведомление при старте СЛЕДУЮЩЕГО этапа — имитируем его при стопе в Once/Naggy.
-// ПОВТОРНО ИСПОЛЬЗУЕМ штатные последовательности stage_start_notification_sequence_map[*].
+// In Slide, notification at the start of the NEXT stage - we simulate it at the stop in Once/Naggy.
+// REUSE the standard sequences stage_start_notification_sequence_map[*].
 static void notify_like_slide_next_stage(FlippPomodoroApp* app) {
     const uint32_t now = time_now();
     if(now < g_naggy_cooldown_until) {
-        return; // не ставим новое в очередь, пока предыдущее ещё играет
+        return; // don't put a new one in the queue while the previous one is still playing
     }
 
     PomodoroStage cur = flipp_pomodoro__get_stage(app->state);
@@ -55,11 +55,11 @@ static void notify_like_slide_next_stage(FlippPomodoroApp* app) {
     notification_message(n, seq);
     furi_record_close(RECORD_NOTIFICATION);
 
-    // блокируем повторы на время проигрывания штатной последовательности
+    // block repetitions for the duration of the standard sequence playback
     g_naggy_cooldown_until = now + 3;
 }
 
-// Мгновенно заглушить звук/вибро (без изобретения новых паттернов — только off-сообщения).
+// Instantly mute sound/vibration (without inventing new patterns - only off-messages).
 static void stop_all_notifications(void) {
     NotificationApp* n = furi_record_open(RECORD_NOTIFICATION);
     static const NotificationSequence seq_stop = { &message_sound_off, &message_vibro_off, NULL };
@@ -67,10 +67,10 @@ static void stop_all_notifications(void) {
     furi_record_close(RECORD_NOTIFICATION);
 }
 
-// Полная остановка «спама» Naggy + глушение
+// Complete stop of Naggy "spam" + jamm
 static void naggy_stop(void) {
     g_naggy_left = 0;
-    // небольшой «зонтик», чтобы тик, пришедший сразу после стопа, не успел поставить новое
+    // a small "umbrella" so that the tick that comes immediately after the stop does not have time to put a new one
     g_naggy_cooldown_until = time_now() + 3;
     stop_all_notifications();
 }
@@ -92,7 +92,7 @@ void flipp_pomodoro_scene_timer_on_next_stage(void *ctx)
 
     FlippPomodoroApp *app = ctx;
 
-    naggy_stop(); // стоп «спам» при переходе на следующий таймер
+    naggy_stop(); // stop "spam" when moving to the next timer
 
     view_dispatcher_send_custom_event(
         app->view_dispatcher,
@@ -101,14 +101,14 @@ void flipp_pomodoro_scene_timer_on_next_stage(void *ctx)
 
 void flipp_pomodoro_scene_timer_on_left(void* ctx) {
     FlippPomodoroApp* app = ctx;
-    naggy_stop(); // стоп «спам» при переходе в настройки
+    naggy_stop(); // stop "spam" when going to settings
     scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneConfig);
 }
 
 void flipp_pomodoro_scene_timer_on_ask_hint(void *ctx)
 {
     FlippPomodoroApp *app = ctx;
-    naggy_stop(); // стоп «спам» на центральное нажатие
+    naggy_stop(); // stop spam on center click
     view_dispatcher_send_custom_event(
         app->view_dispatcher,
         FlippPomodoroAppCustomEventTimerAskHint);
@@ -124,9 +124,9 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     g_naggy_left = 0;
     g_naggy_cooldown_until = 0;
 
-    // Если этап уже истёк:
-    //  - Slide: начинаем заново (как было);
-    //  - Once/Naggy: остаёмся на 00:00 и НЕ переуведомляем после возврата.
+    // If the stage has already expired:
+    // - Slide: start over (as before);
+    // - Once/Naggy: stay at 00:00 and DO NOT re-notify after returning.
     if (flipp_pomodoro__is_stage_expired(app->state))
     {
         FlippPomodoroSettings s;
@@ -137,7 +137,7 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
             flipp_pomodoro__destroy(app->state);
             app->state = flipp_pomodoro__new();
         } else {
-            g_once_notified = true; // запрет повторного старта уведомлений на первом тике
+            g_once_notified = true; // prohibition of repeated start of notifications on the first tick
             naggy_stop();
         }
     }
@@ -147,7 +147,7 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
 
     flipp_pomodoro_view_timer_set_callback_context(app->timer_view, app);
 
-    // центр — подсказка
+    // hint here
     flipp_pomodoro_view_timer_set_on_ok_cb(
         app->timer_view,
         flipp_pomodoro_scene_timer_on_ask_hint);
@@ -188,7 +188,7 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
                 flipp_pomodoro_settings_set_default(&s);
             }
             if (s.buzz_mode == FlippPomodoroBuzzSlide) {
-                // авто-переход (однократно)
+                // auto-transition (one time)
                 if(!g_stage_complete_sent) {
                     g_stage_complete_sent = true;
                     view_dispatcher_send_custom_event(
@@ -196,20 +196,20 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
                         FlippPomodoroAppCustomEventStageComplete);
                 }
             } else if (s.buzz_mode == FlippPomodoroBuzzOnce) {
-                // Once: стоп на 00:00; один раз штатное уведомление СЕЙЧАС; БЕЗ "Continue"
+                // Once: stop at 00:00; one time regular notification NOW; WITHOUT "Continue"
                 if(!g_once_notified) {
                     notify_like_slide_next_stage(app); // ПОВТОРНО ИСПОЛЬЗУЕМ штатное
                     g_once_notified = true;
                 }
             } else { // FlippPomodoroBuzzAnnoying (Naggy)
-                // Naggy: как Once, но повторить штатное уведомление 10 раз (с защитой от очереди)
+                // Naggy: like Once, but repeat the regular notification 10 times (with queue protection)
                 if(!g_once_notified) {
                     g_once_notified = true;
-                    g_naggy_left = 10; // сразу и ещё 9 попыток
+                    g_naggy_left = 10; // 1 + 9
                 }
                 if(g_naggy_left > 0) {
-                    notify_like_slide_next_stage(app); // ПОВТОРНО ИСПОЛЬЗУЕМ штатное (с cooldown)
-                    // уменьшаем счётчик только когда попытались отправить (в т.ч. если заблокировано — всё равно считаем попыткой)
+                    notify_like_slide_next_stage(app); // REUSE the standard one (with cooldown)
+                    // decrease the counter only when we tried to send (including if it is blocked - we still count it as an attempt)
                     g_naggy_left--;
                     if(g_naggy_left == 0) {
                         stop_all_notifications();
@@ -217,7 +217,7 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
                 }
             }
         } else {
-            // активный этап — чистим флаги/спам
+            // active stage - cleaning flags/spam
             g_stage_complete_sent = false;
             g_once_notified = false;
             g_naggy_left = 0;
@@ -225,7 +225,7 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
         break;
     }
     case FlippPomodoroAppCustomEventStateUpdated:
-        // после смены этапа — центр остаётся подсказкой, и стоп «спам»
+        // after changing the stage - the center remains a hint, and stop "spam"
         flipp_pomodoro_scene_timer_sync_view_state(app);
         flipp_pomodoro_view_timer_set_on_ok_cb(
             app->timer_view,
@@ -257,7 +257,7 @@ bool flipp_pomodoro_scene_timer_on_event(void *ctx, SceneManagerEvent event)
             event.event);
         return SceneEventConusmed;
     case SceneManagerEventTypeBack:
-        naggy_stop(); // стоп «спам» при выходе назад
+        naggy_stop(); // stop "spam" when exiting back
         scene_manager_next_scene(app->scene_manager, FlippPomodoroSceneInfo);
         return SceneEventConusmed;
     default:

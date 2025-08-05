@@ -3,7 +3,8 @@
 #include <storage/storage.h>
 #include <string.h>
 
-#define SETTINGS_PATH "/ext/flipp_pomodoro_settings.bin"
+#define SETTINGS_DIR  "/ext/apps_data/pomodoro_timer"
+#define SETTINGS_PATH SETTINGS_DIR "/pomodoro_timer.conf"
 
 typedef struct {
     uint8_t focus_minutes;
@@ -18,12 +19,9 @@ void flipp_pomodoro_settings_set_default(FlippPomodoroSettings* settings) {
     settings->buzz_mode = FlippPomodoroBuzzOnce;
 }
 
-bool flipp_pomodoro_settings_load(FlippPomodoroSettings* settings) {
-    Storage* storage = furi_record_open("storage");
-    File* file = storage_file_alloc(storage);
-
+static bool flipp_pomodoro_settings_try_load_from(File* file, const char* path, FlippPomodoroSettings* settings) {
     bool ok = false;
-    if(storage_file_open(file, SETTINGS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+    if(storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         uint8_t buf[sizeof(FlippPomodoroSettings)] = {0};
         uint32_t n = storage_file_read(file, buf, sizeof(FlippPomodoroSettings));
 
@@ -40,6 +38,15 @@ bool flipp_pomodoro_settings_load(FlippPomodoroSettings* settings) {
         }
         storage_file_close(file);
     }
+    return ok;
+}
+
+bool flipp_pomodoro_settings_load(FlippPomodoroSettings* settings) {
+    Storage* storage = furi_record_open("storage");
+    File* file = storage_file_alloc(storage);
+
+    bool ok = flipp_pomodoro_settings_try_load_from(file, SETTINGS_PATH, settings);
+
     storage_file_free(file);
     furi_record_close("storage");
 
@@ -52,6 +59,9 @@ bool flipp_pomodoro_settings_load(FlippPomodoroSettings* settings) {
 bool flipp_pomodoro_settings_save(const FlippPomodoroSettings* settings) {
     Storage* storage = furi_record_open("storage");
     File* file = storage_file_alloc(storage);
+
+    // гарантируем наличие каталога apps_data/flipp_pomodoro
+    storage_common_mkdir(storage, SETTINGS_DIR);
 
     bool ok = false;
     if(storage_file_open(file, SETTINGS_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
