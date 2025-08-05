@@ -6,6 +6,9 @@
 #include "../flipp_pomodoro_app.h"
 #include "../views/flipp_pomodoro_timer_view.h"
 #include "../modules/flipp_pomodoro_settings.h"
+#include "../modules/flipp_pomodoro.h"
+#include "../helpers/notifications.h"
+#include <notification/notification.h>
 
 enum
 {
@@ -57,6 +60,20 @@ static char *random_string_of_list(char **hints, size_t num_hints)
     return hints[random_index];
 }
 
+// чтобы не «пиликать» на каждом тике после истечения
+static bool g_stage_expired_notified = false;
+
+static void notify_like_slide_next_stage(FlippPomodoroApp* app) {
+    // В Slide уведомление играет при старте СЛЕДУЮЩЕГО этапа.
+    PomodoroStage cur = flipp_pomodoro__get_stage(app->state);
+    PomodoroStage next = (cur == FlippPomodoroStageFocus) ? FlippPomodoroStageRest : FlippPomodoroStageFocus;
+    const NotificationSequence* seq = stage_start_notification_sequence_map[next];
+
+    NotificationApp* n = furi_record_open(RECORD_NOTIFICATION);
+    notification_message(n, seq);
+    furi_record_close(RECORD_NOTIFICATION);
+}
+
 void flipp_pomodoro_scene_timer_sync_view_state(void *ctx)
 {
     furi_assert(ctx);
@@ -97,6 +114,7 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     furi_assert(ctx);
 
     FlippPomodoroApp *app = ctx;
+    g_stage_expired_notified = false;
 
     if (flipp_pomodoro__is_stage_expired(app->state))
     {
@@ -140,23 +158,33 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
 {
     switch (custom_event)
     {
-    case FlippPomodoroAppCustomEventTimerTick:
-        if (flipp_pomodoro__is_stage_expired(app->state))
+    case FlippPomodoroAppCustomEventTimerTick: {
+        const bool expired = flipp_pomodoro__is_stage_expired(app->state);
+        if (expired)
         {
             FlippPomodoroSettings s;
             if(!flipp_pomodoro_settings_load(&s)) {
                 flipp_pomodoro_settings_set_default(&s);
             }
-            // Slide -> old logic
-            // Once  -> freeze
+            // Slide -> как раньше: перейти на следующий этап/вью
             if (s.buzz_mode == FlippPomodoroBuzzSlide) {
+                g_stage_expired_notified = false; // следующий этап сам решит уведомления
                 view_dispatcher_send_custom_event(
                     app->view_dispatcher,
                     FlippPomodoroAppCustomEventStageComplete);
+            } else {
+                // Once -> не переключаемся/не рестартим, но ОДИН РАЗ «пиликаем» как в Slide
+                if(!g_stage_expired_notified) {
+                    notify_like_slide_next_stage(app);
+                    g_stage_expired_notified = true;
+                }
             }
-            // else: do nothing (freeze at current view/time)
+        } else {
+            // сбросить флаг при любом "не истек" (после скипа/старта нового этапа)
+            g_stage_expired_notified = false;
         }
         break;
+    }
     case FlippPomodoroAppCustomEventStateUpdated:
         flipp_pomodoro_scene_timer_sync_view_state(app);
         break;
