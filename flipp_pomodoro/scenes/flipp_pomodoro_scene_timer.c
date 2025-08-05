@@ -68,7 +68,14 @@ static bool g_once_notified = false;       // чтобы звук/вибро п�
 static void notify_like_slide_next_stage(FlippPomodoroApp* app) {
     // В Slide уведомление при старте СЛЕДУЮЩЕГО этапа — имитируем его при стопе в Once
     PomodoroStage cur = flipp_pomodoro__get_stage(app->state);
-    PomodoroStage next = (cur == FlippPomodoroStageFocus) ? FlippPomodoroStageRest : FlippPomodoroStageFocus;
+    // рассчитать следующий этап по индексу с учётом LongBreak
+    uint8_t pos = app->state->current_stage_index % 8;
+    PomodoroStage next;
+    if(cur == FlippPomodoroStageFocus) {
+        next = (pos == 6) ? FlippPomodoroStageLongBreak : FlippPomodoroStageRest;
+    } else {
+        next = FlippPomodoroStageFocus;
+    }
     const NotificationSequence* seq = stage_start_notification_sequence_map[next];
 
     NotificationApp* n = furi_record_open(RECORD_NOTIFICATION);

@@ -52,7 +52,7 @@ void flipp_pomodoro__apply_settings(const FlippPomodoroSettings* s) {
 }
 
 PomodoroStage flipp_pomodoro__stage_by_index(int index) {
-    const int one_loop_size = sizeof(stages_sequence);
+    const int one_loop_size = (int)(sizeof(stages_sequence) / sizeof(stages_sequence[0]));
     return stages_sequence[index % one_loop_size];
 }
 
