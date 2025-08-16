@@ -86,18 +86,16 @@ void flipp_pomodoro_scene_timer_sync_view_state(void *ctx)
         app->state);
 };
 
-void flipp_pomodoro_scene_timer_on_next_stage(void *ctx)
-{
+void flipp_pomodoro_scene_timer_on_next_stage(void* ctx) {
     furi_assert(ctx);
-
-    FlippPomodoroApp *app = ctx;
-
+    FlippPomodoroApp* app = ctx;
     naggy_stop(); // stop "spam" when moving to the next timer
-
+    const bool expired = flipp_pomodoro__is_stage_expired(app->state);
     view_dispatcher_send_custom_event(
         app->view_dispatcher,
-        FlippPomodoroAppCustomEventStageSkip);
-};
+        expired ? FlippPomodoroAppCustomEventStageComplete
+                : FlippPomodoroAppCustomEventStageSkip);
+}
 
 void flipp_pomodoro_scene_timer_on_left(void* ctx) {
     FlippPomodoroApp* app = ctx;
