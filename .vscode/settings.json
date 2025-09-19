@@ -124,7 +124,14 @@
         "dolphin_deed.h": "c",
         "flipp_pomodoro_info_view.h": "c",
         "scene_manager.h": "c",
-        "unordered_set": "c"
+        "unordered_set": "c",
+        "canvas.h": "c",
+        "icon_i.h": "c",
+        "icon_animation_i.h": "c",
+        "icon.h": "c",
+        "flipp_pomodoro_settings.h": "c",
+        "flipp_pomodoro_config_view.h": "c",
+        "furi_hal_resources.h": "c"
     },
     "chatgpt-helper.model": "gpt-4"
 }
