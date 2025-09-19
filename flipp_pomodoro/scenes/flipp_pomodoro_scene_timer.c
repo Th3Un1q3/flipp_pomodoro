@@ -128,9 +128,7 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     if (flipp_pomodoro__is_stage_expired(app->state))
     {
         FlippPomodoroSettings s;
-        if(!flipp_pomodoro_settings_load(&s)) {
-            flipp_pomodoro_settings_set_default(&s);
-        }
+        flipp_pomodoro_settings_load(&s);
         if(s.buzz_mode == FlippPomodoroBuzzSlide) {
             flipp_pomodoro__destroy(app->state);
             app->state = flipp_pomodoro__new();
@@ -182,9 +180,7 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
         if (expired)
         {
             FlippPomodoroSettings s;
-            if(!flipp_pomodoro_settings_load(&s)) {
-                flipp_pomodoro_settings_set_default(&s);
-            }
+            flipp_pomodoro_settings_load(&s);
             if (s.buzz_mode == FlippPomodoroBuzzSlide) {
                 // auto-transition (one time)
                 if(!g_stage_complete_sent) {

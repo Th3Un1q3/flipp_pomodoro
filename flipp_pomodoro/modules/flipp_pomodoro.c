@@ -36,9 +36,7 @@ static uint8_t s_long_break_min = 30;
 
 static void flipp_pomodoro__load_settings_or_default(void) {
     FlippPomodoroSettings s;
-    if(!flipp_pomodoro_settings_load(&s)) {
-        flipp_pomodoro_settings_set_default(&s);
-    }
+    flipp_pomodoro_settings_load(&s);
     s_focus_min = s.focus_minutes;
     s_short_break_min = s.short_break_minutes;
     s_long_break_min = s.long_break_minutes;

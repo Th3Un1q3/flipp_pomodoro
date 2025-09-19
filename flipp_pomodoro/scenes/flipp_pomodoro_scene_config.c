@@ -24,9 +24,7 @@ void flipp_pomodoro_scene_config_on_enter(void* ctx) {
     app->paused_at_timestamp = time_now();
 
     FlippPomodoroSettings s;
-    if(!flipp_pomodoro_settings_load(&s)) {
-        flipp_pomodoro_settings_set_default(&s);
-    }
+    flipp_pomodoro_settings_load(&s);
     app->settings_before = s;
 
     // ram data to view
@@ -52,9 +50,7 @@ void flipp_pomodoro_scene_config_on_exit(void* ctx) {
     FlippPomodoroApp* app = ctx;
 
     FlippPomodoroSettings now;
-    if(!flipp_pomodoro_settings_load(&now)) {
-        flipp_pomodoro_settings_set_default(&now);
-    }
+    flipp_pomodoro_settings_load(&now);
 
     bool changed = memcmp(&now, &app->settings_before, sizeof(FlippPomodoroSettings)) != 0;
 
