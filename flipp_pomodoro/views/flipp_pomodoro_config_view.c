@@ -1,9 +1,20 @@
+
+
 #include "flipp_pomodoro_config_view.h"
 #include "../modules/flipp_pomodoro_settings.h"
 #include <furi.h>
+
+#include <gui/icon_i.h>
 #include <gui/view.h>
 #include <gui/canvas.h>
+
 #include <gui/elements.h>
+
+
+
+const uint8_t _I_back_10px_0[] = {0x00,0x00,0x00,0x10,0x00,0x38,0x00,0x7c,0x00,0xfe,0x00,0x38,0x00,0x38,0x00,0xf8,0x01,0xf8,0x01,0x00,0x00,};
+const uint8_t* const _I_back_10px[] = {_I_back_10px_0};
+const Icon I_back_10px = {.width=10,.height=10,.frame_count=1,.frame_rate=0,.frames=_I_back_10px};
 
 typedef struct {
     uint8_t selected;     // index of the selected row: 0=focus, 1=short, 2=long, 3=buzz mode
@@ -24,6 +35,35 @@ static const char* buzz_mode_to_str(uint8_t m) {
         case FlippPomodoroBuzzAnnoying: return "Naggy";
         default: return "?";
     }
+}
+
+
+void elements_button_back(Canvas* canvas, const char* str) {
+    furi_check(canvas);
+
+    const size_t button_height = 12;
+    const size_t vertical_offset = 3;
+    const size_t horizontal_offset = 3;
+    const size_t string_width = canvas_string_width(canvas, str);
+    const Icon* icon = &I_back_10px;
+    const int32_t icon_h_offset = 3;
+    const int32_t icon_width_with_offset = icon->width + icon_h_offset;
+    const int32_t icon_v_offset = icon->height + 1;
+    const size_t button_width = string_width + horizontal_offset * 2 + icon_width_with_offset;
+
+    const int32_t x = canvas_width(canvas);
+    const int32_t y = canvas_height(canvas);
+
+    canvas_draw_box(canvas, x - button_width, y - button_height, button_width, button_height);
+    canvas_draw_line(canvas, x - button_width - 1, y, x - button_width - 1, y - button_height + 0);
+    canvas_draw_line(canvas, x - button_width - 2, y, x - button_width - 2, y - button_height + 1);
+    canvas_draw_line(canvas, x - button_width - 3, y, x - button_width - 3, y - button_height + 2);
+
+    canvas_invert_color(canvas);
+    canvas_draw_str(canvas, x - button_width + horizontal_offset, y - vertical_offset, str);
+    canvas_draw_icon(
+        canvas, x - horizontal_offset - icon->width, y - icon_v_offset, icon);
+    canvas_invert_color(canvas);
 }
 
 static void config_draw_callback(Canvas* canvas, void* ctx) {
@@ -69,9 +109,10 @@ static void config_draw_callback(Canvas* canvas, void* ctx) {
         canvas_draw_str(canvas, x_right, y, ">");       // right arrow at (x_right, y)
     }
 
+    canvas_set_font(canvas, FontSecondary);
     canvas_set_color(canvas, ColorBlack);
     elements_button_center(canvas, "Save"); // soft-button centered on the bottom bar
-    elements_button_right(canvas, "Back");  // soft-button on the right of the bottom bar
+    elements_button_back(canvas, "Back");  // soft-button on the right of the bottom bar
 }
 
 static bool config_input_callback(InputEvent* event, void* ctx) {
@@ -183,3 +224,4 @@ void flipp_pomodoro_view_config_get_settings(
         out->buzz_mode = model->buzz_mode;              // read buzz mode
     }, false);
 }
+

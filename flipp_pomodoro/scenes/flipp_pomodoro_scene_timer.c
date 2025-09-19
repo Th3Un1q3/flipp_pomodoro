@@ -171,50 +171,63 @@ char *flipp_pomodoro_scene_timer_get_contextual_hint(FlippPomodoroApp *app)
     }
 }
 
+static void handle_buzz_slide(FlippPomodoroApp* app) {
+    if(!g_stage_complete_sent) {
+        g_stage_complete_sent = true;
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher,
+            FlippPomodoroAppCustomEventStageComplete);
+    }
+}
+
+static void handle_buzz_once(FlippPomodoroApp* app) {
+    if(!g_once_notified) {
+        notify_like_slide_next_stage(app);
+        g_once_notified = true;
+    }
+}
+
+static void handle_buzz_annoying(FlippPomodoroApp* app) {
+    if(!g_once_notified) {
+        g_once_notified = true;
+        g_naggy_left = 10;
+    }
+    if(g_naggy_left > 0) {
+        notify_like_slide_next_stage(app);
+        g_naggy_left--;
+        if(g_naggy_left == 0) {
+            stop_all_notifications();
+        }
+    }
+}
+
+static void reset_notification_flags(void) {
+    g_stage_complete_sent = false;
+    g_once_notified = false;
+    g_naggy_left = 0;
+}
+
 void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, FlippPomodoroAppCustomEvent custom_event)
 {
     switch (custom_event)
     {
     case FlippPomodoroAppCustomEventTimerTick: {
-        const bool expired = flipp_pomodoro__is_stage_expired(app->state);
-        if (expired)
-        {
-            FlippPomodoroSettings s;
-            flipp_pomodoro_settings_load(&s);
-            if (s.buzz_mode == FlippPomodoroBuzzSlide) {
-                // auto-transition (one time)
-                if(!g_stage_complete_sent) {
-                    g_stage_complete_sent = true;
-                    view_dispatcher_send_custom_event(
-                        app->view_dispatcher,
-                        FlippPomodoroAppCustomEventStageComplete);
-                }
-            } else if (s.buzz_mode == FlippPomodoroBuzzOnce) {
-                // Once: stop at 00:00; one time regular notification NOW; WITHOUT "Continue"
-                if(!g_once_notified) {
-                    notify_like_slide_next_stage(app); // ПОВТОРНО ИСПОЛЬЗУЕМ штатное
-                    g_once_notified = true;
-                }
-            } else { // FlippPomodoroBuzzAnnoying (Naggy)
-                // Naggy: like Once, but repeat the regular notification 10 times (with queue protection)
-                if(!g_once_notified) {
-                    g_once_notified = true;
-                    g_naggy_left = 10; // 1 + 9
-                }
-                if(g_naggy_left > 0) {
-                    notify_like_slide_next_stage(app); // REUSE the standard one (with cooldown)
-                    // decrease the counter only when we tried to send (including if it is blocked - we still count it as an attempt)
-                    g_naggy_left--;
-                    if(g_naggy_left == 0) {
-                        stop_all_notifications();
-                    }
-                }
-            }
-        } else {
-            // active stage - cleaning flags/spam
-            g_stage_complete_sent = false;
-            g_once_notified = false;
-            g_naggy_left = 0;
+        if (!flipp_pomodoro__is_stage_expired(app->state)) {
+            reset_notification_flags();
+            break;
+        }
+        FlippPomodoroSettings s;
+        flipp_pomodoro_settings_load(&s);
+        switch (s.buzz_mode) {
+            case FlippPomodoroBuzzSlide:
+                handle_buzz_slide(app);
+                break;
+            case FlippPomodoroBuzzOnce:
+                handle_buzz_once(app);
+                break;
+            case FlippPomodoroBuzzAnnoying:
+                handle_buzz_annoying(app);
+                break;
         }
         break;
     }

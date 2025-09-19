@@ -20,24 +20,24 @@ void flipp_pomodoro_settings_set_default(FlippPomodoroSettings* settings) {
 }
 
 static bool flipp_pomodoro_settings_try_load_from(File* file, const char* path, FlippPomodoroSettings* settings) {
-    bool ok = false;
-    if(storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        uint8_t buf[sizeof(FlippPomodoroSettings)] = {0};
-        uint32_t n = storage_file_read(file, buf, sizeof(FlippPomodoroSettings));
-
-        if(n == sizeof(FlippPomodoroSettings)) {
-            memcpy(settings, buf, sizeof(FlippPomodoroSettings));
-            ok = true;
-        } else if(n == sizeof(FlippPomodoroSettingsV1)) {
-            const FlippPomodoroSettingsV1* v1 = (const FlippPomodoroSettingsV1*)buf;
-            settings->focus_minutes = v1->focus_minutes;
-            settings->short_break_minutes = v1->short_break_minutes;
-            settings->long_break_minutes = v1->long_break_minutes;
-            settings->buzz_mode = FlippPomodoroBuzzOnce; // upgrade by default
-            ok = true;
-        }
-        storage_file_close(file);
+    if(!storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        return false;
     }
+    uint8_t buf[sizeof(FlippPomodoroSettings)] = {0};
+    uint32_t n = storage_file_read(file, buf, sizeof(FlippPomodoroSettings));
+    bool ok = false;
+    if(n == sizeof(FlippPomodoroSettings)) {
+        memcpy(settings, buf, sizeof(FlippPomodoroSettings));
+        ok = true;
+    } else if(n == sizeof(FlippPomodoroSettingsV1)) {
+        const FlippPomodoroSettingsV1* v1 = (const FlippPomodoroSettingsV1*)buf;
+        settings->focus_minutes = v1->focus_minutes;
+        settings->short_break_minutes = v1->short_break_minutes;
+        settings->long_break_minutes = v1->long_break_minutes;
+        settings->buzz_mode = FlippPomodoroBuzzOnce; // upgrade by default
+        ok = true;
+    }
+    storage_file_close(file);
     return ok;
 }
 
