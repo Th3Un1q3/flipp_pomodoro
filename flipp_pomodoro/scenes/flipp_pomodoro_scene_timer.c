@@ -34,7 +34,7 @@ static uint8_t g_notification_repeats_left = 0;   // generic counter for repeate
 // Do not duplicate notifications while the previous one is playing.
 // Rough estimate of the duration of the standard sequence ~2.5–3s -> we take 3s.
 static uint32_t g_notification_cooldown_until = 0; // timestamp, before which we do not send the next one
-static bool g_silent_flash_backlight_on = false;
+static bool g_flash_backlight_on = false;
 
 // In Slide, notification at the start of the NEXT stage - we simulate it at the stop in Once/Naggy.
 // REUSE the standard sequences stage_start_notification_sequence_map[*].
@@ -81,7 +81,7 @@ static void notification_stop(void) {
     // a small "umbrella" so that the tick that comes immediately after the stop does not have time to put a new one
     g_notification_cooldown_until = time_now() + 1;
     g_notification_started = false;
-    g_silent_flash_backlight_on = false;
+    g_flash_backlight_on = false;
     stop_all_notifications();
 }
 
@@ -94,19 +94,19 @@ static void send_notification_sequence(const NotificationSequence* seq) {
     furi_record_close(RECORD_NOTIFICATION);
 }
 
-static const NotificationSequence seq_silent_flash_on = {
+static const NotificationSequence seq_flash_on = {
     &message_display_backlight_on,
     &message_green_255,
     NULL,
 };
 
-static const NotificationSequence seq_silent_flash_off = {
+static const NotificationSequence seq_flash_off = {
     &message_display_backlight_off,
     &message_green_0,
     NULL,
 };
 
-static const NotificationSequence seq_silent_vibration = {
+static const NotificationSequence seq_vibrate = {
     &message_vibro_on,
     &message_delay_250,
     &message_vibro_off,
@@ -133,9 +133,9 @@ static const NotificationSequence seq_beep_loud = {
     NULL,
 };
 
-static void toggle_silent_flash_pattern(void) {
-    send_notification_sequence(g_silent_flash_backlight_on ? &seq_silent_flash_off : &seq_silent_flash_on);
-    g_silent_flash_backlight_on = !g_silent_flash_backlight_on;
+static void toggle_flash_pattern(void) {
+    send_notification_sequence(g_flash_backlight_on ? &seq_flash_off : &seq_flash_on);
+    g_flash_backlight_on = !g_flash_backlight_on;
 }
 
 void flipp_pomodoro_scene_timer_sync_view_state(void *ctx)
@@ -184,7 +184,7 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     g_notification_started = false;
     g_notification_repeats_left = 0;
     g_notification_cooldown_until = 0;
-    g_silent_flash_backlight_on = false;
+    g_flash_backlight_on = false;
 
     // If the stage has already expired:
     // - Slide: start over (as before);
@@ -265,25 +265,25 @@ static void handle_buzz_annoying(FlippPomodoroApp* app) {
     }
 }
 
-static void handle_buzz_silent_flash(FlippPomodoroApp* app) {
+static void handle_buzz_flash(FlippPomodoroApp* app) {
     UNUSED(app);
     const uint32_t now = time_now();
     if(now < g_notification_cooldown_until) {
         return;
     }
-    toggle_silent_flash_pattern();
+    toggle_flash_pattern();
     g_notification_started = true;
     g_notification_cooldown_until = now + 1;
 }
 
-static void handle_buzz_silent_vibration(FlippPomodoroApp* app) {
+static void handle_buzz_vibrate(FlippPomodoroApp* app) {
     UNUSED(app);
     const uint32_t now = time_now();
     if(now < g_notification_cooldown_until) {
         return;
     }
-    send_notification_sequence(&seq_silent_vibration);
-    toggle_silent_flash_pattern();
+    send_notification_sequence(&seq_vibrate);
+    toggle_flash_pattern();
     g_notification_started = true;
     g_notification_cooldown_until = now + 1;
 }
@@ -315,7 +315,7 @@ static void reset_notification_flags(void) {
     g_notification_started = false;
     g_notification_repeats_left = 0;
     g_notification_cooldown_until = 0;
-    g_silent_flash_backlight_on = false;
+    g_flash_backlight_on = false;
 }
 
 void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, FlippPomodoroAppCustomEvent custom_event)
@@ -339,11 +339,11 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
             case FlippPomodoroBuzzAnnoying:
                 handle_buzz_annoying(app);
                 break;
-            case FlippPomodoroBuzzSilentFlash:
-                handle_buzz_silent_flash(app);
+            case FlippPomodoroBuzzFlash:
+                handle_buzz_flash(app);
                 break;
-            case FlippPomodoroBuzzSilentVibration:
-                handle_buzz_silent_vibration(app);
+            case FlippPomodoroBuzzVibrate:
+                handle_buzz_vibrate(app);
                 break;
             case FlippPomodoroBuzzSoftBeep:
                 handle_buzz_soft_beep(app);

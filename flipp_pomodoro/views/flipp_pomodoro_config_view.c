@@ -33,8 +33,8 @@ static const char* buzz_mode_to_str(uint8_t m) {
         case FlippPomodoroBuzzSlide: return "Slide";
         case FlippPomodoroBuzzOnce: return "Once";
         case FlippPomodoroBuzzAnnoying: return "Naggy";
-        case FlippPomodoroBuzzSilentFlash: return "Silent flash";
-        case FlippPomodoroBuzzSilentVibration: return "Silent vib";
+        case FlippPomodoroBuzzFlash: return "Flash";
+        case FlippPomodoroBuzzVibrate: return "Vibrate";
         case FlippPomodoroBuzzSoftBeep: return "Beep soft";
         case FlippPomodoroBuzzLoudBeep: return "Beep loud";
         default: return "?";

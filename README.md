@@ -86,8 +86,8 @@ You can configure:
 - **Slide** — Notifies you and immediately starts the next timer.
 - **Once** — Notifies you once, then waits for manual confirmation.
 - **Naggy** — Sends 10 consecutive alerts until you press the center button, open the settings menu, or start a new timer manually.
-- **Silent flash** — Keeps toggling the backlight/LED without playing any sound until you acknowledge the stage change.
-- **Silent vib** — Emits repeating, silent vibration bursts and flashes the screen until you acknowledge the stage change.
+- **Flash** — Keeps toggling the backlight/LED without playing any sound until you acknowledge the stage change.
+- **Vibrate** — Emits repeating, silent vibration bursts and flashes the screen until you acknowledge the stage change.
 - **Beep soft** — Plays a gentle repeating chime pattern so you can catch the change without startling everyone around you.
 - **Beep loud** — Uses a longer, high-contrast beep pattern to make sure you notice the finished stage even in noisy environments.
 
