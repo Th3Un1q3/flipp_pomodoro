@@ -7,6 +7,11 @@ typedef enum {
     FlippPomodoroBuzzSlide = 0,
     FlippPomodoroBuzzOnce = 1,
     FlippPomodoroBuzzAnnoying = 2,
+    FlippPomodoroBuzzSilentFlash = 3,
+    FlippPomodoroBuzzSilentVibration = 4,
+    FlippPomodoroBuzzSoftBeep = 5,
+    FlippPomodoroBuzzLoudBeep = 6,
+    FlippPomodoroBuzzModeCount,
 } FlippPomodoroBuzzMode;
 
 typedef struct {
