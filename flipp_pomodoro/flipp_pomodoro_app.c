@@ -47,7 +47,16 @@ static bool flipp_pomodoro_app_custom_event_callback(void *ctx, uint32_t event)
         };
 
         flipp_pomodoro__toggle_stage(app->state);
-        notification_message(app->notification_app, stage_start_notification_sequence_map[flipp_pomodoro__get_stage(app->state)]);
+
+        PomodoroStage next_stage = flipp_pomodoro__get_stage(app->state);
+        FlippPomodoroSettings settings;
+        flipp_pomodoro_settings_load(&settings);
+        // Keep flash mode completely silent regardless of target stage.
+        bool skip_beep = (settings.buzz_mode == FlippPomodoroBuzzFlash);
+
+        if(!skip_beep) {
+            notification_message(app->notification_app, stage_start_notification_sequence_map[next_stage]);
+        }
         view_dispatcher_send_custom_event(
             app->view_dispatcher,
             FlippPomodoroAppCustomEventStateUpdated);
