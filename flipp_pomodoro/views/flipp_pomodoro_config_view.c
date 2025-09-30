@@ -33,8 +33,27 @@ static const char* buzz_mode_to_str(uint8_t m) {
         case FlippPomodoroBuzzSlide: return "Slide";
         case FlippPomodoroBuzzOnce: return "Once";
         case FlippPomodoroBuzzAnnoying: return "Naggy";
+        case FlippPomodoroBuzzFlash: return "Flash";
+        case FlippPomodoroBuzzVibrate: return "Vibrate";
+        case FlippPomodoroBuzzSoftBeep: return "Beep soft";
+        case FlippPomodoroBuzzLoudBeep: return "Beep loud";
         default: return "?";
     }
+}
+
+static uint8_t buzz_mode_sanitise(uint8_t mode) {
+    if(mode >= FlippPomodoroBuzzModeCount) {
+        return FlippPomodoroBuzzOnce;
+    }
+    return mode;
+}
+
+static uint8_t buzz_mode_next(uint8_t mode) {
+    return (mode + 1) % FlippPomodoroBuzzModeCount;
+}
+
+static uint8_t buzz_mode_prev(uint8_t mode) {
+    return (mode + FlippPomodoroBuzzModeCount - 1) % FlippPomodoroBuzzModeCount;
 }
 
 
@@ -134,7 +153,7 @@ static bool config_input_callback(InputEvent* event, void* ctx) {
                     if(model->selected < 3) {
                         if(model->durations[model->selected] < 99) model->durations[model->selected]++; // increment minutes
                     } else {
-                        model->buzz_mode = (model->buzz_mode + 1) % 3; // next buzz mode
+                        model->buzz_mode = buzz_mode_next(model->buzz_mode); // next buzz mode
                     }
                     handled = true;
                     break;
@@ -142,7 +161,7 @@ static bool config_input_callback(InputEvent* event, void* ctx) {
                     if(model->selected < 3) {
                         if(model->durations[model->selected] > 1) model->durations[model->selected]--; // decrement minutes
                     } else {
-                        model->buzz_mode = (model->buzz_mode + 2) % 3; // previous mode (circular)
+                        model->buzz_mode = buzz_mode_prev(model->buzz_mode); // previous mode (circular)
                     }
                     handled = true;
                     break;
@@ -208,7 +227,7 @@ void flipp_pomodoro_view_config_set_settings(
         model->durations[0] = in->focus_minutes;        // load minutes into model
         model->durations[1] = in->short_break_minutes;
         model->durations[2] = in->long_break_minutes;
-        model->buzz_mode = in->buzz_mode;               // load buzz mode
+        model->buzz_mode = buzz_mode_sanitise(in->buzz_mode); // load buzz mode
     }, true);
 }
 
@@ -224,4 +243,3 @@ void flipp_pomodoro_view_config_get_settings(
         out->buzz_mode = model->buzz_mode;              // read buzz mode
     }, false);
 }
-

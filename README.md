@@ -86,6 +86,10 @@ You can configure:
 - **Slide** — Notifies you and immediately starts the next timer.
 - **Once** — Notifies you once, then waits for manual confirmation.
 - **Naggy** — Sends 10 consecutive alerts until you press the center button, open the settings menu, or start a new timer manually.
+- **Flash** — Keeps toggling the backlight/LED without playing any sound until you acknowledge the stage change.
+- **Vibrate** — Emits repeating, silent vibration bursts and flashes the screen until you acknowledge the stage change.
+- **Beep soft** — Plays a gentle repeating chime pattern so you can catch the change without startling everyone around you.
+- **Beep loud** — Uses a longer, high-contrast beep pattern to make sure you notice the finished stage even in noisy environments.
 
 
 ## Contributing
@@ -117,4 +121,28 @@ bash tools/build.sh -f unleashed
 # While flipper connected via USB and serial port is not bussy
 # Build, run on flipper and keep the app in `Tools` directory
 bash tools/build.sh -f unleashed -i
+```
+
+To try the app on real hardware:
+- Connect your Flipper Zero over USB and make sure no other process is using the serial port.
+- Run `bash tools/build.sh -i` (add `-f unleashed` if you're targeting the unleashed firmware).
+- Once flashing completes, open `Tools → Flipp Pomodoro` on the device to start the timer.
+
+###  Developer Environment
+
+If you want to build with [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) without touching your global Python installation:
+
+```shell
+# create (once) and activate the virtualenv
+python3 -m venv .venv_ufbt
+source .venv_ufbt/bin/activate
+
+# install ufbt locally
+python -m pip install --upgrade ufbt
+
+# build the app
+bash tools/build.sh
+
+# when you're done
+deactivate
 ```
