@@ -14,7 +14,7 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Build Application
         run: |
