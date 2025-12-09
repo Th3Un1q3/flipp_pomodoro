@@ -14,6 +14,7 @@ struct NotificationManager {
 
 NotificationManager* notification_manager_alloc(void) {
     NotificationManager* manager = malloc(sizeof(NotificationManager));
+    furi_assert(manager);
     notification_manager_reset(manager);
     return manager;
 }
@@ -34,11 +35,7 @@ void notification_manager_reset(NotificationManager* manager) {
 
 void notification_manager_reset_flags(NotificationManager* manager) {
     furi_assert(manager);
-    manager->stage_complete_sent = false;
-    manager->notification_started = false;
-    manager->notification_repeats_left = 0;
-    manager->notification_cooldown_until = 0;
-    manager->flash_backlight_on = false;
+    notification_manager_reset(manager);
 }
 
 static void send_notification_sequence(const NotificationSequence* seq) {
