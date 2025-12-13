@@ -1,12 +1,11 @@
 #include "notification_manager.h"
 #include "notifications.h"
 #include "../helpers/time.h"
+#include "../modules/flipp_pomodoro.h"
 #include <notification/notification.h>
 #include <furi.h>
 
 // Notification behavior constants
-#define POMODORO_STAGES_IN_CYCLE 8
-#define LONG_BREAK_STAGE_INDEX 6
 #define ANNOYING_MODE_REPEAT_COUNT 10
 
 struct NotificationManager {
@@ -59,6 +58,7 @@ static void stop_all_notifications(void) {
         &message_vibro_off,
         &message_green_0,
         &message_red_0,
+        &message_blue_0,
         &message_display_backlight_on,
         NULL,
     };
@@ -135,13 +135,8 @@ static void notify_next_stage(NotificationManager* manager, PomodoroStage curren
         return;
     }
 
-    uint8_t stage_position_in_cycle = stage_index % POMODORO_STAGES_IN_CYCLE;
-    PomodoroStage next_stage;
-    if(current_stage == FlippPomodoroStageFocus) {
-        next_stage = (stage_position_in_cycle == LONG_BREAK_STAGE_INDEX) ? FlippPomodoroStageLongBreak : FlippPomodoroStageRest;
-    } else {
-        next_stage = FlippPomodoroStageFocus;
-    }
+    // Reuse the stage sequence logic from flipp_pomodoro module
+    PomodoroStage next_stage = flipp_pomodoro__stage_by_index(stage_index + 1);
     const NotificationSequence* seq = stage_start_notification_sequence_map[next_stage];
 
     send_notification_sequence(seq);
