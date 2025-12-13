@@ -4,6 +4,11 @@
 #include <notification/notification.h>
 #include <furi.h>
 
+// Notification behavior constants
+#define POMODORO_STAGES_IN_CYCLE 8
+#define LONG_BREAK_STAGE_INDEX 6
+#define ANNOYING_MODE_REPEAT_COUNT 10
+
 struct NotificationManager {
     bool stage_complete_sent;
     bool notification_started;
@@ -114,29 +119,40 @@ static void toggle_flash_pattern(NotificationManager* manager) {
     manager->flash_backlight_on = !manager->flash_backlight_on;
 }
 
-static void notify_next_stage(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
+static bool is_cooldown_active(NotificationManager* manager) {
     const uint32_t now = time_now();
-    if(now < manager->notification_cooldown_until) {
+    return now < manager->notification_cooldown_until;
+}
+
+static void set_cooldown(NotificationManager* manager, uint32_t cooldown_seconds) {
+    const uint32_t now = time_now();
+    manager->notification_started = true;
+    manager->notification_cooldown_until = now + cooldown_seconds;
+}
+
+static void notify_next_stage(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
+    if(is_cooldown_active(manager)) {
         return;
     }
 
-    uint8_t pos = stage_index % 8;
-    PomodoroStage next;
+    uint8_t stage_position_in_cycle = stage_index % POMODORO_STAGES_IN_CYCLE;
+    PomodoroStage next_stage;
     if(current_stage == FlippPomodoroStageFocus) {
-        next = (pos == 6) ? FlippPomodoroStageLongBreak : FlippPomodoroStageRest;
+        next_stage = (stage_position_in_cycle == LONG_BREAK_STAGE_INDEX) ? FlippPomodoroStageLongBreak : FlippPomodoroStageRest;
     } else {
-        next = FlippPomodoroStageFocus;
+        next_stage = FlippPomodoroStageFocus;
     }
-    const NotificationSequence* seq = stage_start_notification_sequence_map[next];
+    const NotificationSequence* seq = stage_start_notification_sequence_map[next_stage];
 
     send_notification_sequence(seq);
-    manager->notification_cooldown_until = now + 3;
+    manager->notification_cooldown_until = time_now() + 3;
 }
 
 static bool handle_buzz_slide(NotificationManager* manager) {
     if(!manager->stage_complete_sent) {
         manager->stage_complete_sent = true;
-        return true; // Signal to send stage complete event
+        bool should_send_stage_complete_event = true;
+        return should_send_stage_complete_event;
     }
     return false;
 }
@@ -152,60 +168,55 @@ static bool handle_buzz_once(NotificationManager* manager, PomodoroStage current
 static bool handle_buzz_annoying(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
     if(!manager->notification_started) {
         manager->notification_started = true;
-        manager->notification_repeats_left = 10;
+        manager->notification_repeats_left = ANNOYING_MODE_REPEAT_COUNT;
     }
+    
     if(manager->notification_repeats_left > 0) {
         notify_next_stage(manager, current_stage, stage_index);
         manager->notification_repeats_left--;
-        if(manager->notification_repeats_left == 0) {
-            stop_all_notifications();
-        }
     }
+    
+    if(manager->notification_repeats_left <= 0) {
+        stop_all_notifications();
+    }
+    
     return false;
 }
 
 static bool handle_buzz_flash(NotificationManager* manager) {
-    const uint32_t now = time_now();
-    if(now < manager->notification_cooldown_until) {
+    if(is_cooldown_active(manager)) {
         return false;
     }
     toggle_flash_pattern(manager);
-    manager->notification_started = true;
-    manager->notification_cooldown_until = now + 1;
+    set_cooldown(manager, 1);
     return false;
 }
 
 static bool handle_buzz_vibrate(NotificationManager* manager) {
-    const uint32_t now = time_now();
-    if(now < manager->notification_cooldown_until) {
+    if(is_cooldown_active(manager)) {
         return false;
     }
     send_notification_sequence(&seq_vibrate);
     toggle_flash_pattern(manager);
-    manager->notification_started = true;
-    manager->notification_cooldown_until = now + 1;
+    set_cooldown(manager, 1);
     return false;
 }
 
 static bool handle_buzz_soft_beep(NotificationManager* manager) {
-    const uint32_t now = time_now();
-    if(now < manager->notification_cooldown_until) {
+    if(is_cooldown_active(manager)) {
         return false;
     }
     send_notification_sequence(&seq_beep_soft);
-    manager->notification_started = true;
-    manager->notification_cooldown_until = now + 2;
+    set_cooldown(manager, 2);
     return false;
 }
 
 static bool handle_buzz_loud_beep(NotificationManager* manager) {
-    const uint32_t now = time_now();
-    if(now < manager->notification_cooldown_until) {
+    if(is_cooldown_active(manager)) {
         return false;
     }
     send_notification_sequence(&seq_beep_loud);
-    manager->notification_started = true;
-    manager->notification_cooldown_until = now + 3;
+    set_cooldown(manager, 3);
     return false;
 }
 
