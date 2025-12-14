@@ -66,10 +66,6 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
 
     FlippPomodoroApp *app = ctx;
     notification_manager_reset(app->notification_manager);
-
-    // If the stage has already expired:
-    // - Slide: start over (as before);
-    // - Once/Naggy: stay at 00:00 and DO NOT re-notify after returning.
     if (flipp_pomodoro__is_stage_expired(app->state))
     {
         FlippPomodoroSettings s;
@@ -79,8 +75,6 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
             app->state = flipp_pomodoro__new();
         } else {
             notification_manager_stop(app->notification_manager);
-            // Mark notification as started to prevent re-notification
-            // Calculate next stage for notification
             PomodoroStage next_stage = flipp_pomodoro__stage_by_index(app->state->current_stage_index + 1);
             notification_manager_handle_expired_stage(
                 app->notification_manager,
@@ -90,11 +84,11 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
     }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlippPomodoroAppViewTimer);
+    
     flipp_pomodoro_scene_timer_sync_view_state(app);
 
     flipp_pomodoro_view_timer_set_callback_context(app->timer_view, app);
 
-    // hint here
     flipp_pomodoro_view_timer_set_on_ok_cb(
         app->timer_view,
         flipp_pomodoro_scene_timer_on_ask_hint);
@@ -133,8 +127,7 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
         }
         FlippPomodoroSettings s;
         flipp_pomodoro_settings_load(&s);
-        
-        // Calculate next stage for notification
+
         PomodoroStage next_stage = flipp_pomodoro__stage_by_index(app->state->current_stage_index + 1);
         
         bool should_send_complete = notification_manager_handle_expired_stage(
@@ -149,7 +142,6 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
         break;
     }
     case FlippPomodoroAppCustomEventStateUpdated:
-        // after changing the stage - the center remains a hint, and stop "spam"
         flipp_pomodoro_scene_timer_sync_view_state(app);
         flipp_pomodoro_view_timer_set_on_ok_cb(
             app->timer_view,
