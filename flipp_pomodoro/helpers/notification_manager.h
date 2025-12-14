@@ -37,15 +37,13 @@ void notification_manager_stop(NotificationManager* manager);
 /**
  * @brief Handle timer tick when stage is expired
  * @param manager Pointer to the notification manager
- * @param current_stage Current pomodoro stage
- * @param stage_index Current stage index for calculating next stage
+ * @param next_stage The next pomodoro stage to notify about
  * @param buzz_mode Notification mode to use
  * @return true if stage complete event should be sent, false otherwise
  */
 bool notification_manager_handle_expired_stage(
     NotificationManager* manager,
-    PomodoroStage current_stage,
-    uint8_t stage_index,
+    PomodoroStage next_stage,
     FlippPomodoroBuzzMode buzz_mode);
 
 /**

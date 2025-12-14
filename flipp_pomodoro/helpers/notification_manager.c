@@ -1,7 +1,6 @@
 #include "notification_manager.h"
 #include "notifications.h"
 #include "../helpers/time.h"
-#include "../modules/flipp_pomodoro.h"
 #include <notification/notification.h>
 #include <furi.h>
 
@@ -134,13 +133,11 @@ static void set_cooldown(NotificationManager* manager, uint32_t cooldown_seconds
     manager->notification_cooldown_until = current_time + cooldown_seconds;
 }
 
-static void notify_next_stage(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
+static void notify_next_stage(NotificationManager* manager, PomodoroStage next_stage) {
     if(is_cooldown_active(manager)) {
         return;
     }
 
-    // Reuse the stage sequence logic from flipp_pomodoro module
-    PomodoroStage next_stage = flipp_pomodoro__stage_by_index(stage_index + 1);
     const NotificationSequence* notification_sequence = stage_start_notification_sequence_map[next_stage];
 
     send_notification_sequence(notification_sequence);
@@ -155,22 +152,22 @@ static bool handle_buzz_slide(NotificationManager* manager) {
     return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
-static bool handle_buzz_once(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
+static bool handle_buzz_once(NotificationManager* manager, PomodoroStage next_stage) {
     if(!manager->notification_started) {
         manager->notification_started = true;
-        notify_next_stage(manager, current_stage, stage_index);
+        notify_next_stage(manager, next_stage);
     }
     return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
-static bool handle_buzz_annoying(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
+static bool handle_buzz_annoying(NotificationManager* manager, PomodoroStage next_stage) {
     if(!manager->notification_started) {
         manager->notification_started = true;
         manager->notification_repeats_left = ANNOYING_MODE_REPEAT_COUNT;
     }
     
     if(manager->notification_repeats_left > 0) {
-        notify_next_stage(manager, current_stage, stage_index);
+        notify_next_stage(manager, next_stage);
         manager->notification_repeats_left--;
     }
     
@@ -220,8 +217,7 @@ static bool handle_buzz_loud_beep(NotificationManager* manager) {
 
 bool notification_manager_handle_expired_stage(
     NotificationManager* manager,
-    PomodoroStage current_stage,
-    uint8_t stage_index,
+    PomodoroStage next_stage,
     FlippPomodoroBuzzMode buzz_mode) {
     
     furi_assert(manager);
@@ -230,9 +226,9 @@ bool notification_manager_handle_expired_stage(
         case FlippPomodoroBuzzSlide:
             return handle_buzz_slide(manager);
         case FlippPomodoroBuzzOnce:
-            return handle_buzz_once(manager, current_stage, stage_index);
+            return handle_buzz_once(manager, next_stage);
         case FlippPomodoroBuzzAnnoying:
-            return handle_buzz_annoying(manager, current_stage, stage_index);
+            return handle_buzz_annoying(manager, next_stage);
         case FlippPomodoroBuzzFlash:
             return handle_buzz_flash(manager);
         case FlippPomodoroBuzzVibrate:
@@ -242,6 +238,6 @@ bool notification_manager_handle_expired_stage(
         case FlippPomodoroBuzzLoudBeep:
             return handle_buzz_loud_beep(manager);
         default:
-            return handle_buzz_once(manager, current_stage, stage_index);
+            return handle_buzz_once(manager, next_stage);
     }
 }

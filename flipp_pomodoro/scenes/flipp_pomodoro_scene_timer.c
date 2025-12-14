@@ -132,10 +132,13 @@ void flipp_pomodoro_scene_timer_handle_custom_event(FlippPomodoroApp *app, Flipp
         }
         FlippPomodoroSettings s;
         flipp_pomodoro_settings_load(&s);
+        
+        // Calculate next stage for notification
+        PomodoroStage next_stage = flipp_pomodoro__stage_by_index(app->state->current_stage_index + 1);
+        
         bool should_send_complete = notification_manager_handle_expired_stage(
             app->notification_manager,
-            flipp_pomodoro__get_stage(app->state),
-            app->state->current_stage_index,
+            next_stage,
             s.buzz_mode);
         if(should_send_complete) {
             view_dispatcher_send_custom_event(
