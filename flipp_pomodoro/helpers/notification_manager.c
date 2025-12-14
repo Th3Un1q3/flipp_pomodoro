@@ -8,6 +8,10 @@
 // Notification behavior constants
 #define ANNOYING_MODE_REPEAT_COUNT 10
 
+// Handler return value signals
+#define SIGNAL_SEND_STAGE_COMPLETE_EVENT true
+#define SIGNAL_NO_STAGE_COMPLETE_EVENT false
+
 struct NotificationManager {
     bool stage_complete_sent;
     bool notification_started;
@@ -146,10 +150,9 @@ static void notify_next_stage(NotificationManager* manager, PomodoroStage curren
 static bool handle_buzz_slide(NotificationManager* manager) {
     if(!manager->stage_complete_sent) {
         manager->stage_complete_sent = true;
-        bool should_send_stage_complete_event = true;
-        return should_send_stage_complete_event;
+        return SIGNAL_SEND_STAGE_COMPLETE_EVENT;
     }
-    return false;
+    return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
 static bool handle_buzz_once(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
@@ -157,7 +160,7 @@ static bool handle_buzz_once(NotificationManager* manager, PomodoroStage current
         manager->notification_started = true;
         notify_next_stage(manager, current_stage, stage_index);
     }
-    return false;
+    return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
 static bool handle_buzz_annoying(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
@@ -175,44 +178,44 @@ static bool handle_buzz_annoying(NotificationManager* manager, PomodoroStage cur
         stop_all_notifications();
     }
     
-    return false;
+    return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
 static bool handle_buzz_flash(NotificationManager* manager) {
     if(is_cooldown_active(manager)) {
-        return false;
+        return SIGNAL_NO_STAGE_COMPLETE_EVENT;
     }
     toggle_flash_pattern(manager);
     set_cooldown(manager, 1);
-    return false;
+    return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
 static bool handle_buzz_vibrate(NotificationManager* manager) {
     if(is_cooldown_active(manager)) {
-        return false;
+        return SIGNAL_NO_STAGE_COMPLETE_EVENT;
     }
     send_notification_sequence(&vibrate_sequence);
     toggle_flash_pattern(manager);
     set_cooldown(manager, 1);
-    return false;
+    return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
 static bool handle_buzz_soft_beep(NotificationManager* manager) {
     if(is_cooldown_active(manager)) {
-        return false;
+        return SIGNAL_NO_STAGE_COMPLETE_EVENT;
     }
     send_notification_sequence(&soft_beep_sequence);
     set_cooldown(manager, 2);
-    return false;
+    return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
 static bool handle_buzz_loud_beep(NotificationManager* manager) {
     if(is_cooldown_active(manager)) {
-        return false;
+        return SIGNAL_NO_STAGE_COMPLETE_EVENT;
     }
     send_notification_sequence(&loud_beep_sequence);
     set_cooldown(manager, 3);
-    return false;
+    return SIGNAL_NO_STAGE_COMPLETE_EVENT;
 }
 
 bool notification_manager_handle_expired_stage(
