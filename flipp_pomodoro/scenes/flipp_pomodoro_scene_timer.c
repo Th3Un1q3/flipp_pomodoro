@@ -80,10 +80,11 @@ void flipp_pomodoro_scene_timer_on_enter(void *ctx)
         } else {
             notification_manager_stop(app->notification_manager);
             // Mark notification as started to prevent re-notification
+            // Calculate next stage for notification
+            PomodoroStage next_stage = flipp_pomodoro__stage_by_index(app->state->current_stage_index + 1);
             notification_manager_handle_expired_stage(
                 app->notification_manager,
-                flipp_pomodoro__get_stage(app->state),
-                app->state->current_stage_index,
+                next_stage,
                 s.buzz_mode);
         }
     }
