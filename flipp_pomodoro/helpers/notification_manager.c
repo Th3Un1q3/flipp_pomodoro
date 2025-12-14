@@ -42,18 +42,18 @@ void notification_manager_reset_flags(NotificationManager* manager) {
     notification_manager_reset(manager);
 }
 
-static void send_notification_sequence(const NotificationSequence* seq) {
-    if(!seq) {
+static void send_notification_sequence(const NotificationSequence* sequence) {
+    if(!sequence) {
         return;
     }
-    NotificationApp* n = furi_record_open(RECORD_NOTIFICATION);
-    notification_message(n, seq);
+    NotificationApp* notification_app = furi_record_open(RECORD_NOTIFICATION);
+    notification_message(notification_app, sequence);
     furi_record_close(RECORD_NOTIFICATION);
 }
 
 static void stop_all_notifications(void) {
-    NotificationApp* n = furi_record_open(RECORD_NOTIFICATION);
-    static const NotificationSequence seq_stop = {
+    NotificationApp* notification_app = furi_record_open(RECORD_NOTIFICATION);
+    static const NotificationSequence stop_sequence = {
         &message_sound_off,
         &message_vibro_off,
         &message_green_0,
@@ -62,7 +62,7 @@ static void stop_all_notifications(void) {
         &message_display_backlight_on,
         NULL,
     };
-    notification_message(n, &seq_stop);
+    notification_message(notification_app, &stop_sequence);
     furi_record_close(RECORD_NOTIFICATION);
 }
 
@@ -75,26 +75,26 @@ void notification_manager_stop(NotificationManager* manager) {
     stop_all_notifications();
 }
 
-static const NotificationSequence seq_flash_on = {
+static const NotificationSequence flash_backlight_on_sequence = {
     &message_display_backlight_on,
     &message_green_255,
     NULL,
 };
 
-static const NotificationSequence seq_flash_off = {
+static const NotificationSequence flash_backlight_off_sequence = {
     &message_display_backlight_off,
     &message_green_0,
     NULL,
 };
 
-static const NotificationSequence seq_vibrate = {
+static const NotificationSequence vibrate_sequence = {
     &message_vibro_on,
     &message_delay_250,
     &message_vibro_off,
     NULL,
 };
 
-static const NotificationSequence seq_beep_soft = {
+static const NotificationSequence soft_beep_sequence = {
     &message_display_backlight_on,
     &message_note_d5,
     &message_delay_250,
@@ -102,7 +102,7 @@ static const NotificationSequence seq_beep_soft = {
     NULL,
 };
 
-static const NotificationSequence seq_beep_loud = {
+static const NotificationSequence loud_beep_sequence = {
     &message_display_backlight_on,
     &message_note_d5,
     &message_delay_250,
@@ -115,19 +115,19 @@ static const NotificationSequence seq_beep_loud = {
 };
 
 static void toggle_flash_pattern(NotificationManager* manager) {
-    send_notification_sequence(manager->flash_backlight_on ? &seq_flash_off : &seq_flash_on);
+    send_notification_sequence(manager->flash_backlight_on ? &flash_backlight_off_sequence : &flash_backlight_on_sequence);
     manager->flash_backlight_on = !manager->flash_backlight_on;
 }
 
 static bool is_cooldown_active(NotificationManager* manager) {
-    const uint32_t now = time_now();
-    return now < manager->notification_cooldown_until;
+    const uint32_t current_time = time_now();
+    return current_time < manager->notification_cooldown_until;
 }
 
 static void set_cooldown(NotificationManager* manager, uint32_t cooldown_seconds) {
-    const uint32_t now = time_now();
+    const uint32_t current_time = time_now();
     manager->notification_started = true;
-    manager->notification_cooldown_until = now + cooldown_seconds;
+    manager->notification_cooldown_until = current_time + cooldown_seconds;
 }
 
 static void notify_next_stage(NotificationManager* manager, PomodoroStage current_stage, uint8_t stage_index) {
@@ -137,9 +137,9 @@ static void notify_next_stage(NotificationManager* manager, PomodoroStage curren
 
     // Reuse the stage sequence logic from flipp_pomodoro module
     PomodoroStage next_stage = flipp_pomodoro__stage_by_index(stage_index + 1);
-    const NotificationSequence* seq = stage_start_notification_sequence_map[next_stage];
+    const NotificationSequence* notification_sequence = stage_start_notification_sequence_map[next_stage];
 
-    send_notification_sequence(seq);
+    send_notification_sequence(notification_sequence);
     manager->notification_cooldown_until = time_now() + 3;
 }
 
@@ -191,7 +191,7 @@ static bool handle_buzz_vibrate(NotificationManager* manager) {
     if(is_cooldown_active(manager)) {
         return false;
     }
-    send_notification_sequence(&seq_vibrate);
+    send_notification_sequence(&vibrate_sequence);
     toggle_flash_pattern(manager);
     set_cooldown(manager, 1);
     return false;
@@ -201,7 +201,7 @@ static bool handle_buzz_soft_beep(NotificationManager* manager) {
     if(is_cooldown_active(manager)) {
         return false;
     }
-    send_notification_sequence(&seq_beep_soft);
+    send_notification_sequence(&soft_beep_sequence);
     set_cooldown(manager, 2);
     return false;
 }
@@ -210,7 +210,7 @@ static bool handle_buzz_loud_beep(NotificationManager* manager) {
     if(is_cooldown_active(manager)) {
         return false;
     }
-    send_notification_sequence(&seq_beep_loud);
+    send_notification_sequence(&loud_beep_sequence);
     set_cooldown(manager, 3);
     return false;
 }
