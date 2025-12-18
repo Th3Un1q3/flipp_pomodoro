@@ -56,16 +56,7 @@ static void send_notification_sequence(const NotificationSequence* sequence) {
 
 static void stop_all_notifications(void) {
     NotificationApp* notification_app = furi_record_open(RECORD_NOTIFICATION);
-    static const NotificationSequence stop_sequence = {
-        &message_sound_off,
-        &message_vibro_off,
-        &message_green_0,
-        &message_red_0,
-        &message_blue_0,
-        &message_display_backlight_on,
-        NULL,
-    };
-    notification_message(notification_app, &stop_sequence);
+    notification_message(notification_app, &stop_all_notification);
     furi_record_close(RECORD_NOTIFICATION);
 }
 
@@ -77,45 +68,6 @@ void notification_manager_stop(NotificationManager* manager) {
     manager->flash_backlight_on = false;
     stop_all_notifications();
 }
-
-static const NotificationSequence flash_backlight_on_sequence = {
-    &message_display_backlight_on,
-    &message_green_255,
-    NULL,
-};
-
-static const NotificationSequence flash_backlight_off_sequence = {
-    &message_display_backlight_off,
-    &message_green_0,
-    NULL,
-};
-
-static const NotificationSequence vibrate_sequence = {
-    &message_vibro_on,
-    &message_delay_250,
-    &message_vibro_off,
-    NULL,
-};
-
-static const NotificationSequence soft_beep_sequence = {
-    &message_display_backlight_on,
-    &message_note_d5,
-    &message_delay_250,
-    &message_sound_off,
-    NULL,
-};
-
-static const NotificationSequence loud_beep_sequence = {
-    &message_display_backlight_on,
-    &message_note_d5,
-    &message_delay_250,
-    &message_note_b5,
-    &message_delay_250,
-    &message_note_d5,
-    &message_delay_250,
-    &message_sound_off,
-    NULL,
-};
 
 static void toggle_flash_pattern(NotificationManager* manager) {
     send_notification_sequence(manager->flash_backlight_on ? &flash_backlight_off_sequence : &flash_backlight_on_sequence);
