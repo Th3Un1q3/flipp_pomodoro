@@ -36,15 +36,7 @@
       "extensions": [
         "ms-vscode.cpptools",
         "editorconfig.editorconfig"
-      ],
-      "settings": {
-        "files.associations": {
-          "*.fam": "python"
-        },
-        "C_Cpp.default.cStandard": "c17",
-        "C_Cpp.intelliSenseEngine": "default",
-        "editor.formatOnSave": false
-      }
+      ]
     }
   }
 }
