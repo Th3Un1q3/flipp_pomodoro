@@ -21,7 +21,10 @@ jobs:
       - name: Build Application
         uses: devcontainers/ci@v0.3
         with:
-          runCmd: bash tools/dev/build.sh standard && bash tools/dev/build.sh unleashed
+          runCmd: |
+            bash tools/dev/build.sh standard
+            bash tools/dev/build.sh unleashed
+            bash tools/dev/check-sdk-drift.sh --check-only
 
       - name: Bump Version and Push Tag
         id: tag_version

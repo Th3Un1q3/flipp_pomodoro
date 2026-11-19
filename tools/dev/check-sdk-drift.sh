@@ -18,6 +18,13 @@ fail() {
     exit 1
 }
 
+check_only=0
+if [[ "${1:-}" == "--check-only" ]]; then
+    check_only=1
+    shift
+fi
+[[ $# -eq 0 ]] || fail "usage: $0 [--check-only]"
+
 [[ -r "$baseline" ]] || fail "cannot read baseline: $baseline"
 [[ "$(jq -r '.schema // empty' "$baseline")" == "1" ]] || fail "unsupported baseline schema in $baseline"
 
@@ -58,6 +65,10 @@ for channel in standard unleashed; do
 
     if [[ "$version" == "$current_version" && "$api" == "$current_api" ]]; then
         continue
+    fi
+
+    if [[ "$check_only" -eq 1 ]]; then
+        fail "$channel drift: $current_version/$current_api -> $version/$api; update tools/dev/sdk-baseline.json first"
     fi
 
     delta="$(awk -v a="$api" -v b="$baseline_api" 'BEGIN { printf "%.2f", a - b }')"
