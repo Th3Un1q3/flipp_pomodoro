@@ -18,12 +18,7 @@
 
 ### From Repository
 
-Download from [releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest). Assets are named `flipp_pomodoro_{firmware}_{api_version}.fap`:
-
-- `{firmware}` is `standard` (official firmware) or `unleashed`.
-- `{api_version}` is the firmware API the app was linked against. There is no simple mapping from API version to firmware release; the latest artifact targets the latest API.
-
-Copy the `.fap` to `/apps/Tools` on the Flipper's SD card, open it from the `Applications` menu, and optionally add it to favourites.
+Download from [releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest). See [docs/INSTALATION.md](docs/INSTALATION.md) for asset naming and SD-card installation steps.
 
 ### From Application Marketplace
 

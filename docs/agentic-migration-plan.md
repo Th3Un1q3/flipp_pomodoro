@@ -216,7 +216,7 @@ Acceptance:
 - `grep -rn "\.standard-firmware\|\.unleashed-firmware\|tools/build.sh" --include="*.md" .` prints nothing (outside this plan, which keeps the historical references).
 - Both links in `README.md` to the new docs resolve.
 
-**Execution note:** `docs/INSTALATION.md` was deleted rather than renamed: its install steps were merged into `README.md` and corrected from the stale `/apps/Misc` path to `/apps/Tools`, which matches the release notes. `README.md` now links to `docs/agentic-environment.md`, `docs/environment-baseline.md` and `docs/agentic-migration-plan.md`; all three were verified to exist. `docs/agentic-environment.md` gained the nightly drift workflow description and the shellcheck caveat.
+**Execution note:** `docs/INSTALATION.md` was briefly deleted and then restored after review. It is not consumed by any workflow — the release notes are an inline `body:` block in `release.yml` — but it is a user-facing install guide, so it was kept as the single source for those steps and corrected from the stale `/apps/Misc` path to `/apps/Tools`. `README.md` links to it instead of duplicating it, and also links to `docs/agentic-environment.md`, `docs/environment-baseline.md` and `docs/agentic-migration-plan.md`; all four targets were verified to exist. `docs/agentic-environment.md` gained the nightly drift workflow description and the shellcheck caveat. The removal of the old `tools/build.sh -i` flash flow is intentional: the dev container has no USB passthrough, and the documented replacement is `ufbt launch` from a host with the device attached (confirmed as a real target in the pinned SDK).
 
 ## Task 9 — Clean-room proof
 
@@ -248,7 +248,7 @@ Acceptance:
 | `.vscode/tasks.json` flashing task | `just build unleashed` |
 | `release.yml` submodule build | `tools/dev/build.sh` |
 | Dependabot `gitsubmodule` entry | nightly `sdk-drift.yml` + `tools/dev/check-sdk-drift.sh` PR (the pinned ufbt version only pin the tool, not the firmware API) |
-| `docs/INSTALATION.md` | README install section |
+| `docs/INSTALATION.md` | kept, corrected and linked from README (its original content was duplicated in release notes, not consumed by them) |
 | README virtualenv workflow | dev container workflow |
 
 ## Failure record and prevention measures
@@ -267,6 +267,7 @@ Observed during execution; each measure is a check to run before calling the mig
 | submodule bump was the upstream-API trigger | Task 3a nightly SDK drift PR, with `docs/**` in `ci.yml` paths |
 | plan's literal grep criteria contradicted the tracked plan itself | interpret those greps as "no live reference outside this document" |
 | `shellcheck` is absent in the current container | add it to the Dockerfile and record that `just lint` cannot prove it until the image is rebuilt |
+| `docs/INSTALATION.md` was deleted during Task 8 | restored as the canonical install guide, corrected, and linked from README; audit every deletion for live references before committing |
 
 ## Stop conditions
 
