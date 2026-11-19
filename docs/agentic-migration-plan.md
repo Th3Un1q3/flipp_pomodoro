@@ -273,6 +273,7 @@ Observed during execution; each measure is a check to run before calling the mig
 | CI grew a parallel Python/pipx/cache toolchain | workflows use only `devcontainers/ci@v0.3`; grep for `setup-python`, `pipx install`, `actions/cache` in `.github/workflows/` must be empty |
 | SonarCloud flagged mutable action tags as high-severity security alerts | every external action is pinned to a full 40-character commit SHA with a version comment; grep for `uses: .*@(v[0-9]|[0-9]+\.[0-9]+)` in `.github/workflows/` must be empty |
 | SonarCloud flagged consecutive `RUN` instructions in `.devcontainer/Dockerfile` | combine adjacent install steps into one `RUN` chain; keep explanatory comments above the combined instruction |
+| a dev-container job hung and burned CI minutes | job timeouts (30/30/45 min) plus dev-container step timeouts (25/25/40 min) in `ci.yml`, `release.yml`, and `sdk-drift.yml` |
 | ufbt `CDB` wrote `flipp_pomodoro/.vscode/compile_commands.json` | ignored in `.gitignore`; do not delete it as a stray file |
 | stale submodule working trees reported API 87.1 while gitlinks were 88.2/88.26 | baseline read from gitlink commits, never from submodule `HEAD` |
 | multi-GB submodule deletion was nearly done with `rm -rf` | move to a backup first; verify both builds before committing the retirement |
