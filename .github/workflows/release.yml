@@ -19,9 +19,9 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Build Application
-        run: |
-          bash tools/build.sh -f unleashed
-          bash tools/build.sh
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: bash tools/dev/build.sh standard && bash tools/dev/build.sh unleashed
 
       - name: Bump Version and Push Tag
         id: tag_version

@@ -1,0 +1,50 @@
+{
+  "name": "flipp-pomodoro (C + ufbt + OpenCode)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "UFBT_VERSION": "0.2.6"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "22"
+    },
+    "ghcr.io/jsburckhardt/devcontainer-features/just:1": {}
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "32gb"
+  },
+  "mounts": [
+    "source=flipp-ufbt,target=/home/vscode/.ufbt,type=volume",
+    "source=flipp-opencode-data,target=/home/vscode/.local/share/opencode,type=volume"
+  ],
+  "containerEnv": {
+    "UFBT_HOME": "/home/vscode/.ufbt/standard"
+  },
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin:/home/vscode/.opencode/bin"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "editorconfig.editorconfig"
+      ],
+      "settings": {
+        "files.associations": {
+          "*.fam": "python"
+        },
+        "C_Cpp.default.cStandard": "c17",
+        "C_Cpp.intelliSenseEngine": "default",
+        "editor.formatOnSave": false
+      }
+    }
+  }
+}

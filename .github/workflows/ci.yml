@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - '.devcontainer/**'
+      - 'flipp_pomodoro/**'
+      - 'tools/dev/**'
+      - 'justfile'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  build:
+    name: Dev container build gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build both channels in the dev container
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: bash .devcontainer/verify.sh && bash tools/dev/build.sh unleashed

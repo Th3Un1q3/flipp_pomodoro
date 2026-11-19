@@ -4,3 +4,6 @@ dist
 .DS_STORE/
 .DS_Store
 /.idea
+
+# ufbt regenerates this compile database in the app directory on every build.
+flipp_pomodoro/.vscode/
