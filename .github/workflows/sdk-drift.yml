@@ -14,10 +14,10 @@ jobs:
     name: Check for new firmware APIs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Refresh SDKs and rebuild in the dev container
-        uses: devcontainers/ci@v0.3
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3
         with:
           runCmd: |
             bash tools/dev/sdk.sh standard --force
@@ -27,7 +27,7 @@ jobs:
             bash tools/dev/check-sdk-drift.sh
 
       - name: Open a PR when the API moved
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
         with:
           commit-message: 'docs: record new firmware versions and APIs'
           title: 'chore: firmware SDK drift'
