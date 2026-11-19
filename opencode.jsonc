@@ -1,0 +1,95 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "logLevel": "WARN",
+    "formatter": false,
+    "lsp": false,
+    // Rules combine in order and the last match wins, so specific exceptions
+    // follow the broad allow.
+    "permissions": [
+        {
+            "action": "shell",
+            "resource": "*",
+            "effect": "allow"
+        },
+        {
+            "action": "shell",
+            "resource": "git *",
+            "effect": "ask"
+        },
+        {
+            "action": "shell",
+            "resource": "git status *",
+            "effect": "allow"
+        },
+        {
+            "action": "shell",
+            "resource": "git diff *",
+            "effect": "allow"
+        },
+        {
+            "action": "shell",
+            "resource": "git log *",
+            "effect": "allow"
+        },
+        {
+            "action": "shell",
+            "resource": "git show *",
+            "effect": "allow"
+        },
+        {
+            "action": "shell",
+            "resource": "git ls-files *",
+            "effect": "allow"
+        },
+        {
+            "action": "shell",
+            "resource": "rm -rf *",
+            "effect": "ask"
+        },
+        {
+            "action": "shell",
+            "resource": "sudo *",
+            "effect": "ask"
+        },
+        {
+            "action": "shell",
+            "resource": "ufbt flash*",
+            "effect": "ask"
+        },
+        {
+            "action": "shell",
+            "resource": "ufbt launch*",
+            "effect": "ask"
+        },
+        {
+            "action": "read",
+            "resource": "*.env",
+            "effect": "deny"
+        },
+        {
+            "action": "read",
+            "resource": "*.pem",
+            "effect": "deny"
+        },
+        {
+            "action": "read",
+            "resource": "*.key",
+            "effect": "deny"
+        },
+        {
+            "action": "external_directory",
+            "resource": "*",
+            "effect": "ask"
+        },
+        {
+            "action": "external_directory",
+            "resource": "~/.ufbt/*",
+            "effect": "allow"
+        },
+        {
+            "action": "read",
+            "resource": "~/.ufbt/*",
+            "effect": "allow"
+        }
+    ]
+}

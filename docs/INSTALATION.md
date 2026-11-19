@@ -1,11 +1,10 @@
- # Installation
+# Installation
 
-* Download application file for your firmware. In the release you can find 
-`flipp_pomodoro_{firmware}_{api_version}.fap` where:
-* * `{firmware}` - is type of firmware you use `standard` stands for official one.
-* * `{api_version}` - is the version of API that was used for build. There is no easy way to map api version and firmware version. But this app is made the way the latest release is compatable with latest api/firmware.
-* Copy `flipp_pomodoro_{firmware}_{api_version}.fap` to SD-card of your flipper `/apps/Misc`. 
-* Run from `Applications` menu of your flipper.
-* Hint: add app to favorites and stay always productive
+Download the application file for your firmware from the [latest release](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest). The asset is named `flipp_pomodoro_{firmware}_{firmware_version}.fap`, where:
 
-So Long, and Thanks for All the Fish!
+- `{firmware}` is `standard` for official firmware or `unleashed` for Unleashed firmware.
+- `{firmware_version}` is the firmware release the application was built against, for example `1.5.1` or `unlshd-095`. Choose the asset that matches the firmware installed on your device.
+
+Copy `flipp_pomodoro_{firmware}_{firmware_version}.fap` to `/apps/Tools` on the Flipper's SD card, then open it from the `Applications` menu. You can add it to favorites for quick access.
+
+So Long, and Thanks for All the Fish! 🐬

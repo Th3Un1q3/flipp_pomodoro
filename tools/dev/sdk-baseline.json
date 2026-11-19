@@ -1,0 +1,15 @@
+{
+    "schema": 1,
+    "channels": {
+        "standard": {
+            "baseline_api": "88.2",
+            "firmware_version": "1.5.1",
+            "api": "88.2"
+        },
+        "unleashed": {
+            "baseline_api": "88.26",
+            "firmware_version": "unlshd-095",
+            "api": "88.26"
+        }
+    }
+}

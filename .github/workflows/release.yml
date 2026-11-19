@@ -8,31 +8,36 @@ jobs:
   build:
     name: Bump and Release
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.13.1
+        uses: styfle/cancel-workflow-action@d07a454dad7609a92316b57b23c9ccfd4f59af66 # 0.13.1
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Build Application
-        run: |
-          bash tools/build.sh -f unleashed
-          bash tools/build.sh
+        timeout-minutes: 25
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3
+        with:
+          runCmd: |
+            bash tools/dev/build.sh standard
+            bash tools/dev/build.sh unleashed
+            bash tools/dev/check-sdk-drift.sh --check-only
 
       - name: Bump Version and Push Tag
         id: tag_version
-        uses: mathieudutour/github-tag-action@v7
+        uses: mathieudutour/github-tag-action@af99e60ce8132224b8e6ebab5023449fe256ed46 # v7
         with:
           release_branches: master
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
 
       - name: Create a GitHub Release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: ${{ steps.tag_version.outputs.new_tag }}
@@ -40,10 +45,10 @@ jobs:
             # Installation
 
             * Download application file for your firmware. In the release you can find 
-            `flipp_pomodoro_{firmware}_{api_version}.fap` where:
+            `flipp_pomodoro_{firmware}_{firmware_version}.fap` where:
             * * `{firmware}` - is type of firmware you use `standard` stands for official one.
-            * * `{api_version}` - is the version of API that was used for build. There is no easy way to map api version and firmware version. But this app is made the way the latest release is compatable with latest api/firmware.
-            * Copy `flipp_pomodoro_{firmware}_{api_version}.fap` to SD-card of your flipper `/apps/Tools`. 
+            * * `{firmware_version}` - is the firmware release the app was built against, for example `1.5.1` or `unlshd-095`. Choose the asset that matches the firmware on your device.
+            * Copy `flipp_pomodoro_{firmware}_{firmware_version}.fap` to SD-card of your flipper `/apps/Tools`. 
             * Run from `Applications` menu of your flipper.
             * Hint: add app to favorites and stay always productive
 
