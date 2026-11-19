@@ -213,8 +213,10 @@ Acceptance:
 
 Acceptance:
 
-- `grep -rn "\.standard-firmware\|\.unleashed-firmware\|tools/build.sh" --include="*.md" .` prints nothing.
+- `grep -rn "\.standard-firmware\|\.unleashed-firmware\|tools/build.sh" --include="*.md" .` prints nothing (outside this plan, which keeps the historical references).
 - Both links in `README.md` to the new docs resolve.
+
+**Execution note:** `docs/INSTALATION.md` was deleted rather than renamed: its install steps were merged into `README.md` and corrected from the stale `/apps/Misc` path to `/apps/Tools`, which matches the release notes. `README.md` now links to `docs/agentic-environment.md`, `docs/environment-baseline.md` and `docs/agentic-migration-plan.md`; all three were verified to exist. `docs/agentic-environment.md` gained the nightly drift workflow description and the shellcheck caveat.
 
 ## Task 9 — Clean-room proof
 

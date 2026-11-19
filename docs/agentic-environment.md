@@ -7,7 +7,7 @@ The repository builds inside a Dev Container that carries the C toolchain, ufbt,
 | Layer | Contents |
 |---|---|
 | Base | `mcr.microsoft.com/devcontainers/base:noble`, user `vscode` |
-| OS packages | `build-essential`, `file`, `jq`, `libusb-1.0-0`, `pipx`, `python3`, `unzip`, `xz-utils` |
+| OS packages | `build-essential`, `file`, `jq`, `libusb-1.0-0`, `pipx`, `python3`, `shellcheck`, `unzip`, `xz-utils` |
 | Dev Container Features | git, GitHub CLI, Node 22, `just` |
 | Python tool | `ufbt`, installed with `pipx` |
 | Agent | OpenCode, installed by `https://opencode.ai/v2/install` into `~/.opencode/bin` |
@@ -30,9 +30,13 @@ ufbt downloads its own Python and `arm-none-eabi` toolchain on first use, so the
 | standard | `~/.ufbt/standard` | official firmware release channel |
 | unleashed | `~/.ufbt/unleashed` | `https://up.unleashedflip.com/directory.json` |
 
-`UFBT_HOME` defaults to the standard directory, so a bare `ufbt` builds the standard channel. `tools/dev/build.sh` sets the directory per channel.
+`UFBT_HOME` defaults to the standard directory, so a bare `ufbt` builds the standard channel. `tools/dev/build.sh` sets the directory per channel through `tools/dev/sdk.sh`, the only script that runs `ufbt update`.
 
-Updating the Unleashed directory without `--index-url` replaces it with the official SDK. Use `just sdk-unleashed`, which passes the URL.
+Updating the Unleashed directory without `--index-url` replaces it with the official SDK. Use `just sdk-unleashed` (or `bash tools/dev/sdk.sh unleashed --force`), which passes the URL.
+
+## API change detection
+
+Firmware APIs are no longer tracked with git submodules. A nightly `.github/workflows/sdk-drift.yml` run refreshes both SDKs, rebuilds both channels inside the dev container, and compares the built API names with the parity table in `docs/environment-baseline.md`. On a change it opens a pull request; that PR runs `ci.yml`, and merging it runs `release.yml` to publish new artifacts. This preserves the old Dependabot submodule-bump trigger without keeping multi-gigabyte firmware trees in the repository.
 
 ## Commands
 
@@ -42,11 +46,12 @@ Updating the Unleashed directory without `--index-url` replaces it with the offi
 | `just build` | standard FAP in `dist/` |
 | `just build unleashed` | Unleashed FAP in `dist/` |
 | `just build-all` | both channels |
-| `just sdk-unleashed` | download the Unleashed SDK only |
+| `just sdk-unleashed` | refresh the Unleashed SDK only |
+| `just lint` | shellcheck the build and dev-container scripts (needs the image that includes shellcheck) |
 
 The agent loads `AGENTS.md` for repository rules and `.agents/skills/flipper-fap-build/` for the build procedure.
 
 ## Limits
 
 - The container builds; it does not flash. `ufbt flash` and `ufbt launch` need `/dev/ttyACM*` from the host, which a Dev Container does not receive by default.
-- The Unleashed SDK is a third-party index. Its API can lag the submodule the project used before; the build prints the API version it linked against.
+- The Unleashed SDK is a third-party index, so its API can lag official firmware. The build prints the API version it linked against, and the nightly drift workflow records any change.

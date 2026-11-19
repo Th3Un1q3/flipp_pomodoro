@@ -18,7 +18,12 @@
 
 ### From Repository
 
-Download from [releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest) and follow instructions there.
+Download from [releases](https://github.com/Th3Un1q3/flipp_pomodoro/releases/latest). Assets are named `flipp_pomodoro_{firmware}_{api_version}.fap`:
+
+- `{firmware}` is `standard` (official firmware) or `unleashed`.
+- `{api_version}` is the firmware API the app was linked against. There is no simple mapping from API version to firmware release; the latest artifact targets the latest API.
+
+Copy the `.fap` to `/apps/Tools` on the Flipper's SD card, open it from the `Applications` menu, and optionally add it to favourites.
 
 ### From Application Marketplace
 
@@ -110,39 +115,31 @@ You can follow project development on the [project board](https://github.com/use
 
 
 ###  Build and Package
-Build application commands
+The dev container provides the toolchain, ufbt and both SDKs. Every build goes through `tools/dev/build.sh`; the `just` recipes are the entry points.
+
 ```shell
-# For standard(official) firmware
-bash tools/build.sh
-
-# For unleashed firmware
-bash tools/build.sh -f unleashed 
-
-# While flipper connected via USB and serial port is not bussy
-# Build, run on flipper and keep the app in `Tools` directory
-bash tools/build.sh -f unleashed -i
+just build             # standard (official) firmware
+just build unleashed   # Unleashed firmware
+just build-all         # both channels
+just verify            # tool/SDK check plus a clean standard build
 ```
 
-To try the app on real hardware:
+Each build writes `dist/flipp_pomodoro_<channel>_<api>.fap`.
+
+To try the app on real hardware, use a host with the device attached:
 - Connect your Flipper Zero over USB and make sure no other process is using the serial port.
-- Run `bash tools/build.sh -i` (add `-f unleashed` if you're targeting the unleashed firmware).
-- Once flashing completes, open `Tools → Flipp Pomodoro` on the device to start the timer.
+- From `flipp_pomodoro/`, run `ufbt launch` with `UFBT_HOME` pointing at the channel's SDK directory.
+- Open `Tools → Flipp Pomodoro` on the device to start the timer.
+
+The container builds only; it does not pass USB devices through.
 
 ###  Developer Environment
 
-If you want to build with [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) without touching your global Python installation:
+The supported setup is the dev container: open the repository in VS Code and choose "Reopen in Container". See [docs/agentic-environment.md](docs/agentic-environment.md) for the image contents, persistent volumes and SDK reset procedure. The recorded build parity is in [docs/environment-baseline.md](docs/environment-baseline.md) and the toolchain migration history is in [docs/agentic-migration-plan.md](docs/agentic-migration-plan.md).
+
+On a host without the container, install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) with pipx and build from the app directory:
 
 ```shell
-# create (once) and activate the virtualenv
-python3 -m venv .venv_ufbt
-source .venv_ufbt/bin/activate
-
-# install ufbt locally
-python -m pip install --upgrade ufbt
-
-# build the app
-bash tools/build.sh
-
-# when you're done
-deactivate
+pipx install ufbt
+cd flipp_pomodoro && ufbt
 ```
