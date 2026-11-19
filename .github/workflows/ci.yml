@@ -6,6 +6,7 @@ on:
       - '.devcontainer/**'
       - 'flipp_pomodoro/**'
       - 'tools/dev/**'
+      - 'docs/**'
       - 'justfile'
       - '.github/workflows/ci.yml'
 

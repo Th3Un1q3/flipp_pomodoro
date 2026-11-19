@@ -15,6 +15,8 @@ This plan runs inside the dev container that `docs/agentic-environment.md` descr
 
 The container build path already exists: `tools/dev/build.sh` drives ufbt and produces `dist/flipp_pomodoro_<channel>_<api>.fap`.
 
+**Motivation that must survive the retirement:** the `gitsubmodule` watcher was not housekeeping. A daily Dependabot bump of either gitlink opened a PR; that PR ran CI, and merging it to `master` ran the release workflow against the newly published firmware API. The replacement must keep the loop *upstream API change → PR → build → release*. Removing the submodules without replacing that trigger silently loses functionality.
+
 ## Non-goals
 
 - Building or flashing firmware. ufbt builds applications only; hardware steps stay on a host.
@@ -24,10 +26,11 @@ The container build path already exists: `tools/dev/build.sh` drives ufbt and pr
 ## Preconditions
 
 ```bash
-git status --short          # must be empty
+git status --short          # record the starting state
 just verify                 # must exit 0
-git switch -c chore/retire-legacy-toolchain
 ```
+
+**Execution note:** the plan originally required a clean tree and a new `chore/retire-legacy-toolchain` branch. Neither held here: the tree already carried untracked setup work, and the maintainer directed that everything stay on `feat/agentic-setup`. No branch was created or checked out. Do not reintroduce the branch step when re-reading this plan.
 
 ## Task 0 — Capture the baseline before anything is deleted
 
@@ -74,7 +77,7 @@ Acceptance:
 
 ## Task 3 — Guard retirement with CI
 
-Edit `.github/workflows/release.yml`: replace the two `bash tools/build.sh ...` calls with `bash tools/dev/build.sh standard` and `bash tools/dev/build.sh unleashed`, add `actions/setup-python`, install the same ufbt version the Dockerfile pins, and cache `~/.ufbt`. Leave the release triggers and the artifact glob alone.
+Edit `.github/workflows/release.yml`: replace the two legacy build calls with one `devcontainers/ci@v0.3` step whose `runCmd` calls `bash tools/dev/build.sh standard && bash tools/dev/build.sh unleashed` inside the prebuilt image. Do **not** add `actions/setup-python`, `pipx install`, or `actions/cache` — that is a second toolchain and duplicates the Dockerfile. Leave the release triggers and the artifact glob alone.
 
 Add `.github/workflows/ci.yml` with one job that runs in the dev container and builds both channels:
 
@@ -84,13 +87,38 @@ Add `.github/workflows/ci.yml` with one job that runs in the dev container and b
     runCmd: bash .devcontainer/verify.sh && bash tools/dev/build.sh unleashed
 ```
 
-Trigger it on pull requests touching `.devcontainer/**`, `flipp_pomodoro/**`, `tools/dev/**`, `justfile`, or the workflow file itself.
+Trigger it on pull requests touching `.devcontainer/**`, `flipp_pomodoro/**`, `tools/dev/**`, `docs/**`, `justfile`, or the workflow file itself. `docs/**` is required so the SDK-drift PR below is actually gated.
 
 Acceptance:
 
 - `git diff .github/workflows/release.yml` shows only build-step changes.
 - The `ci.yml` job passes on the pull request.
 - A deliberately broken C statement in `flipp_pomodoro/` makes the job fail; revert the statement and the job passes again.
+
+**Execution notes / prevention:**
+- `.devcontainer/verify.sh` first resolved `repo_root` with `../..`, which from `.devcontainer/` is `/workspaces`, so `just verify` failed with `tools/dev/build.sh: No such file or directory`. The script directory is one level below the repo root. Prevent recurrence by running `just verify` locally after any change to `.devcontainer/*.sh`; CI alone would not have caught a broken local gate.
+- SDK setup had been duplicated in four places (`tools/dev/build.sh`, `.devcontainer/post-create.sh`, `justfile`, build skill). Only `tools/dev/sdk.sh` may contain `ufbt update`. Prevent drift with `grep -rn "ufbt update" --exclude-dir=.git .`; prose in docs is fine, executable duplicates are not.
+- I initially added `actions/setup-python`, `pipx install` and `actions/cache` to `release.yml`, creating a second toolchain. The dev container image already owns those. Prevent recurrence with `grep -rn "setup-python\|actions/cache\|pipx install" .github/workflows/`, which must print nothing.
+
+## Task 3a — Preserve upstream API change detection (added during execution)
+
+The original plan missed this. The submodule bumps were the trigger for rebuilds; deleting them without a replacement means a new firmware API is only noticed when a human happens to push app code. Add `.github/workflows/sdk-drift.yml`:
+
+- `schedule` (nightly) plus `workflow_dispatch`; no parallel toolchain — use `devcontainers/ci@v0.3`.
+- `runCmd` refreshes both SDKs through `tools/dev/sdk.sh --force`, rebuilds both channels, then runs `tools/dev/check-sdk-drift.sh`.
+- `check-sdk-drift.sh` compares the `API:` encoded in the fresh artifacts with the parity table in `docs/environment-baseline.md`; on drift it rewrites that row.
+- `peter-evans/create-pull-request` opens a PR for the changed parity row; that PR runs `ci.yml`, and merging it runs `release.yml`.
+
+Acceptance:
+
+- A nightly run with no API change leaves the working tree clean.
+- A simulated API change updates the parity row and opens a PR; no release is created until the PR is merged.
+- The drift workflow uses only the dev container action and the same build/SDK scripts as local builds.
+
+**Execution notes / prevention:**
+- `ci.yml` had to gain `docs/**` in `pull_request.paths`. Without it, a drift PR that only edits the parity table would not run CI, so merging it would not exercise the build gate.
+- Both the drift PR and the release step rely on `devcontainers/ci@v0.3` mounting the workspace back to the runner so `create-pull-request` sees the rewritten table and `ncipollo/release-action` sees `dist/**`. That behaviour cannot be exercised locally; it is documented here rather than claimed as verified.
+- `check-sdk-drift.sh` compares against the parity table in `docs/environment-baseline.md`, not against the release assets. Those assets predate the current APIs, so they must not be used as the "current" value.
 
 ## Task 4 — Retire the firmware submodules
 
@@ -102,6 +130,8 @@ git rm -f .gitmodules
 ```
 
 Then remove the two submodule lines from `.gitignore` and the `gitsubmodule` update from `.github/dependabot.yml`.
+
+**Execution notes:** the checked-out submodules were stale (`8622f1a`, `7ccce3e`, API 87.1) relative to the recorded gitlinks (`9e810dc` API 88.2, `9c63277` API 88.26). Task 0 must read the API from the gitlink commit, never from the submodule working tree's `HEAD`, or the baseline is understated and every later parity check is wrong. Before deleting the multi-GB trees, move them to a backup location so the retirement can be reverted if a build fails. The plan's `rm -rf` list also misses the stale `.git/modules/.official-firmware` directory left by an older submodule name; it is harmless but should be recorded rather than silently rediscovered.
 
 Acceptance:
 
@@ -124,6 +154,8 @@ Acceptance:
 - `grep -rn "tools/build.sh" --exclude-dir=.git .` prints nothing.
 - `tools/` contains only `files-list.sh` and `dev/`.
 - `git ls-files -s | awk '$1 == "160000"'` still prints nothing.
+
+**Execution note:** this document itself contains `tools/build.sh` in its historical sections, so the literal grep can never print nothing while the plan is tracked. Treat the criterion as "no live reference outside this plan"; the same applies to Task 8's markdown grep. Do not rewrite or delete the plan just to make a grep pass.
 
 ## Task 6 — Replace the editor configuration
 
@@ -153,6 +185,8 @@ Acceptance:
 - `grep -rn "firmware" .vscode` prints nothing.
 - Opening `flipp_pomodoro/flipp_pomodoro_app_i.h` in the container resolves `furi.h` without an error squiggle. Record the observation in the commit message.
 
+**Execution note:** `flipp_pomodoro/.vscode/compile_commands.json` is generated by ufbt's `CDB` step on every build, not by the editor config. It must be ignored via `.gitignore` (`flipp_pomodoro/.vscode/`), not deleted as a stray file. Also, `.devcontainer/devcontainer.json` carries its own `customizations.vscode.settings` block duplicating `files.associations` / `C_Cpp.default.cStandard` / `editor.formatOnSave`; keep one owner (the tracked `.vscode/settings.json`) to avoid a second configuration source.
+
 ## Task 7 — Lint the scripts that now carry the build
 
 Add `shellcheck` to `.devcontainer/Dockerfile`, then add a recipe:
@@ -167,6 +201,8 @@ Acceptance:
 
 - `just lint` exits 0, or every suppression names its rule code and reason inline.
 - `docker build` for the devcontainer still succeeds after the Dockerfile edit.
+
+**Execution note:** `just verify` cannot prove the Dockerfile change; a real `docker build` needs the host daemon, which is outside this container. Record that limitation instead of claiming the image was rebuilt. Shellcheck must cover the new `tools/dev/sdk.sh` and `tools/dev/check-sdk-drift.sh` too, not just the two scripts named in the original plan.
 
 ## Task 8 — Documentation
 
@@ -196,6 +232,8 @@ Acceptance:
 - Both artifacts exist; neither API is lower than `docs/environment-baseline.md`.
 - `git status --short` is empty after the build (artifacts stay ignored).
 
+**Execution note:** `docker volume rm flipp-ufbt` is a host-side command; the dev container cannot remove the volume it is running from. Do not fake this step — leave it to the maintainer and report it as unverified locally.
+
 ## Retire map
 
 | Removed | Replaced by |
@@ -207,9 +245,26 @@ Acceptance:
 | `.vscode/settings.json` association list and `chatgpt-helper.model` | three project settings |
 | `.vscode/tasks.json` flashing task | `just build unleashed` |
 | `release.yml` submodule build | `tools/dev/build.sh` |
-| Dependabot `gitsubmodule` entry | pinned `ufbt` version in the Dockerfile |
+| Dependabot `gitsubmodule` entry | nightly `sdk-drift.yml` + `tools/dev/check-sdk-drift.sh` PR (the pinned ufbt version only pin the tool, not the firmware API) |
 | `docs/INSTALATION.md` | README install section |
 | README virtualenv workflow | dev container workflow |
+
+## Failure record and prevention measures
+
+Observed during execution; each measure is a check to run before calling the migration done.
+
+| Failure / gap observed | Measure that prevents it |
+|---|---|
+| Two files named `build.sh` (`tools/build.sh`, `tools/dev/build.sh`) | Task 5 deletes the legacy one; `find tools -name build.sh` must print only `tools/dev/build.sh` |
+| SDK bootstrap duplicated in four places | single `tools/dev/sdk.sh`; grep for `ufbt update` outside it must be empty |
+| `repo_root` off by one in `verify.sh` broke `just verify` | compute from `$(dirname "${BASH_SOURCE[0]}")/..` and run `just verify` locally after editing dev-container scripts |
+| CI grew a parallel Python/pipx/cache toolchain | workflows use only `devcontainers/ci@v0.3`; grep for `setup-python`, `pipx install`, `actions/cache` in `.github/workflows/` must be empty |
+| ufbt `CDB` wrote `flipp_pomodoro/.vscode/compile_commands.json` | ignored in `.gitignore`; do not delete it as a stray file |
+| stale submodule working trees reported API 87.1 while gitlinks were 88.2/88.26 | baseline read from gitlink commits, never from submodule `HEAD` |
+| multi-GB submodule deletion was nearly done with `rm -rf` | move to a backup first; verify both builds before committing the retirement |
+| submodule bump was the upstream-API trigger | Task 3a nightly SDK drift PR, with `docs/**` in `ci.yml` paths |
+| plan's literal grep criteria contradicted the tracked plan itself | interpret those greps as "no live reference outside this document" |
+| `shellcheck` is absent in the current container | add it to the Dockerfile and record that `just lint` cannot prove it until the image is rebuilt |
 
 ## Stop conditions
 

@@ -1,0 +1,39 @@
+name: SDK drift
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    name: Check for new firmware APIs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Refresh SDKs and rebuild in the dev container
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: |
+            bash tools/dev/sdk.sh standard --force
+            bash tools/dev/sdk.sh unleashed --force
+            bash tools/dev/build.sh standard
+            bash tools/dev/build.sh unleashed
+            bash tools/dev/check-sdk-drift.sh
+
+      - name: Open a PR when the API moved
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'docs: record new firmware API versions'
+          title: 'chore: firmware API drift'
+          body: |
+            A scheduled SDK refresh produced a new firmware API. Updating the
+            recorded parity runs CI on this PR; merging it publishes fresh FAPs.
+          add-paths: docs/environment-baseline.md
+          branch: chore/sdk-api-drift
+          delete-branch: true
