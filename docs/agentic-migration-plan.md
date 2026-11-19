@@ -202,7 +202,7 @@ Acceptance:
 - `just lint` exits 0, or every suppression names its rule code and reason inline.
 - `docker build` for the devcontainer still succeeds after the Dockerfile edit.
 
-**Execution note:** `just verify` cannot prove the Dockerfile change; a real `docker build` needs the host daemon, which is outside this container. Record that limitation instead of claiming the image was rebuilt. Shellcheck must cover the new `tools/dev/sdk.sh` and `tools/dev/check-sdk-drift.sh` too, not just the two scripts named in the original plan.
+**Execution note:** `just verify` cannot prove the Dockerfile change; neither `docker` nor `shellcheck` exists in the running container, so neither `docker build` nor `just lint` can be executed here. Record that limitation instead of claiming the image was rebuilt or the lint gate passed. `bash -n` was run locally on all five scripts as a syntax-only substitute; it is not a shellcheck pass. Shellcheck must cover the new `tools/dev/sdk.sh` and `tools/dev/check-sdk-drift.sh` too, not just the two scripts named in the original plan. The maintainer must run `just lint` once in a rebuilt container.
 
 ## Task 8 — Documentation
 

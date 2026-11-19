@@ -16,6 +16,7 @@ RUN apt-get update \
         pipx \
         python3-pip \
         python3-venv \
+        shellcheck \
         unzip \
         xz-utils \
     && rm -rf /var/lib/apt/lists/*

@@ -17,6 +17,10 @@ sdk-unleashed:
 verify:
     bash .devcontainer/verify.sh
 
+# Check the shell scripts that drive the build and the dev container.
+lint:
+    shellcheck tools/dev/*.sh .devcontainer/*.sh
+
 # Delete generated build output.
 clean:
     rm -rf dist flipp_pomodoro/dist
