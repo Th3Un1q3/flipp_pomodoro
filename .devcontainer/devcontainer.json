@@ -35,7 +35,8 @@
     "vscode": {
       "extensions": [
         "ms-vscode.cpptools",
-        "editorconfig.editorconfig"
+        "editorconfig.editorconfig",
+        "ms-vscode.cpptools-extension-pack"
       ]
     }
   }
