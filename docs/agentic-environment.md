@@ -36,7 +36,7 @@ Updating the Unleashed directory without `--index-url` replaces it with the offi
 
 ## API change detection
 
-Firmware APIs are no longer tracked with git submodules. A nightly `.github/workflows/sdk-drift.yml` run refreshes both SDKs, rebuilds both channels inside the dev container, and compares the built API names with the parity table in `docs/environment-baseline.md`. On a change it opens a pull request; that PR runs `ci.yml`, and merging it runs `release.yml` to publish new artifacts. This preserves the old Dependabot submodule-bump trigger without keeping multi-gigabyte firmware trees in the repository.
+Firmware APIs are no longer tracked with git submodules. A nightly `.github/workflows/sdk-drift.yml` run refreshes both SDKs, rebuilds both channels inside the dev container, and compares the deployed firmware versions and APIs with the tracked JSON baseline in `tools/dev/sdk-baseline.json`. On a change it opens a pull request that updates that JSON; `ci.yml` gates the PR, and merging it runs `release.yml` to publish new artifacts. `docs/environment-baseline.md` is background for humans and is not parsed by automation. This preserves the old Dependabot submodule-bump trigger without keeping multi-gigabyte firmware trees in the repository.
 
 ## Commands
 

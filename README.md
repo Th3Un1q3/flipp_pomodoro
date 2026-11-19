@@ -130,7 +130,7 @@ The container builds only; it does not pass USB devices through.
 
 ###  Developer Environment
 
-The supported setup is the dev container: open the repository in VS Code and choose "Reopen in Container". See [docs/agentic-environment.md](docs/agentic-environment.md) for the image contents, persistent volumes and SDK reset procedure. The recorded build parity is in [docs/environment-baseline.md](docs/environment-baseline.md) and the toolchain migration history is in [docs/agentic-migration-plan.md](docs/agentic-migration-plan.md).
+The supported setup is the dev container: open the repository in VS Code and choose "Reopen in Container". See [docs/agentic-environment.md](docs/agentic-environment.md) for the image contents, persistent volumes and SDK reset procedure. The machine-readable SDK baseline is `tools/dev/sdk-baseline.json`; historical release data is in [docs/environment-baseline.md](docs/environment-baseline.md), and the toolchain migration history is in [docs/agentic-migration-plan.md](docs/agentic-migration-plan.md).
 
 On a host without the container, install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) with pipx and build from the app directory:
 

@@ -44,12 +44,13 @@ git -C .standard-firmware show HEAD:firmware/targets/f7/api_symbols.csv 2>/dev/n
 git -C .standard-firmware show HEAD:targets/f7/api_symbols.csv 2>/dev/null | awk -F',' 'NR==2{print $3}'
 ```
 
-Write `docs/environment-baseline.md` with one row per channel: submodule commit, API version, released `.fap` name, and `sha256sum` of the latest release artifact if one exists. Note that the numbers come from the submodule commit, not from a build, when the submodules are not checked out.
+Write `docs/environment-baseline.md` with one row per channel: submodule commit, API version, released `.fap` name, and `sha256sum` of the latest release artifact if one exists. Note that the numbers come from the submodule commit, not from a build, when the submodules are not checked out. The machine-readable baseline used later is `tools/dev/sdk-baseline.json`; the Markdown document is not parsed by automation.
 
 Acceptance:
 
 - `docs/environment-baseline.md` lists both channels with an API version each.
-- The file is committed.
+- `tools/dev/sdk-baseline.json` records `baseline_api`, `firmware_version`, and `api` for both channels.
+- Both files are committed.
 
 ## Task 1 — Standard-channel parity
 
@@ -60,7 +61,7 @@ just build standard
 Acceptance:
 
 - `dist/flipp_pomodoro_standard_<firmware_version>.fap` exists and is larger than 1 KB.
-- `<firmware_version>` matches the deployed standard SDK, and the API printed by ufbt is equal to or newer than the standard row in `docs/environment-baseline.md`; record the delta. A lower API is a stop condition.
+- `<firmware_version>` matches the deployed standard SDK, and the API printed by ufbt is equal to or newer than `baseline_api` for `standard` in `tools/dev/sdk-baseline.json`; record the delta. A lower API is a stop condition.
 
 ## Task 2 — Unleashed-channel parity
 
@@ -72,7 +73,7 @@ just build unleashed
 Acceptance:
 
 - `dist/flipp_pomodoro_unleashed_<firmware_version>.fap` exists and is larger than 1 KB.
-- `<firmware_version>` matches the deployed Unleashed SDK, and the API printed by ufbt is equal to or newer than the unleashed row in `docs/environment-baseline.md`; record the delta. A lower API is a stop condition.
+- `<firmware_version>` matches the deployed Unleashed SDK, and the API printed by ufbt is equal to or newer than `baseline_api` for `unleashed` in `tools/dev/sdk-baseline.json`; record the delta. A lower API is a stop condition.
 - `UFBT_HOME=~/.ufbt/unleashed ufbt update --index-url=https://up.unleashedflip.com/directory.json --channel=release` leaves the artifact unchanged on a rebuild.
 
 ## Task 3 — Guard retirement with CI
@@ -87,7 +88,7 @@ Add `.github/workflows/ci.yml` with one job that runs in the dev container and b
     runCmd: bash .devcontainer/verify.sh && bash tools/dev/build.sh unleashed
 ```
 
-Trigger it on pull requests touching `.devcontainer/**`, `flipp_pomodoro/**`, `tools/dev/**`, `docs/**`, `justfile`, or the workflow file itself. `docs/**` is required so the SDK-drift PR below is actually gated.
+Trigger it on pull requests touching `.devcontainer/**`, `flipp_pomodoro/**`, `tools/dev/**`, `docs/**`, `justfile`, or the workflow file itself. `tools/dev/**` gates the JSON-only SDK-drift PR below; `docs/**` remains useful for documentation-only changes but is no longer a drift requirement.
 
 Acceptance:
 
@@ -106,23 +107,25 @@ The original plan missed this. The submodule bumps were the trigger for rebuilds
 
 - `schedule` (nightly) plus `workflow_dispatch`; no parallel toolchain — use `devcontainers/ci@v0.3`.
 - `runCmd` refreshes both SDKs through `tools/dev/sdk.sh --force`, rebuilds both channels, then runs `tools/dev/check-sdk-drift.sh`.
-- `check-sdk-drift.sh` compares both the firmware version encoded in the fresh artifact name and the SDK API (`api_symbols.csv`) with the parity table in `docs/environment-baseline.md`; on drift it rewrites that row.
-- `peter-evans/create-pull-request` opens a PR for the changed parity row; the drift job itself already builds both channels. After the `pull_request` run is allowed, `ci.yml` gates the PR, and merging it runs `release.yml`.
+- `check-sdk-drift.sh` compares the deployed firmware version and SDK API (`api_symbols.csv`) with `tools/dev/sdk-baseline.json`; on drift it rewrites only that JSON file. The fresh artifact name is cross-checked against the SDK version, but artifact size is not baseline data.
+- `peter-evans/create-pull-request` opens a PR for the changed JSON baseline; the drift job itself already builds both channels. After the `pull_request` run is allowed, `ci.yml` gates the PR, and merging it runs `release.yml`.
 
 Acceptance:
 
 - A nightly run with no firmware-version or API change leaves the working tree clean.
-- A simulated change to either field updates the parity row and opens a PR; no release is created until the PR is merged.
+- A simulated change to either field updates the JSON baseline and opens a PR; no release is created until the PR is merged.
 - The drift workflow uses only the dev container action and the same build/SDK scripts as local builds.
 
-**Execution note:** artifact suffixes were changed from the API to the firmware version so the file name identifies the firmware release a user should install. `build.sh` reads `.version` from `ufbt_state.json`, sanitizes it, and still fails the build if ufbt prints no API line. `check-sdk-drift.sh` reads the SDK version and API directly, verifies the artifact name matches the version, and rewrites the parity row when either changes. Release notes and the install guide were updated to the new naming; old API-suffixed release assets remain valid historical files.
+**Execution note:** artifact suffixes were changed from the API to the firmware version so the file name identifies the firmware release a user should install. `build.sh` reads `.version` from `ufbt_state.json`, sanitizes it, and still fails the build if ufbt prints no API line. `check-sdk-drift.sh` reads the SDK version and API directly, verifies the artifact name matches the version, and rewrites `tools/dev/sdk-baseline.json` when either changes. Release notes and the install guide were updated to the new naming; old API-suffixed release assets remain valid historical files.
 
 **Execution notes / prevention:**
-- `ci.yml` had to gain `docs/**` in `pull_request.paths`. Without it, a drift PR that only edits the parity table would not run CI, so merging it would not exercise the build gate.
-- Feasibility audit of the hosted handoff (source-checked, not exercised locally): `devcontainers/ci@v0.3` runs `devcontainer up/exec --workspace-folder <checkout>`, and the dev container CLI bind-mounts that folder into the container. Files written under the checkout — including the rewritten `docs/environment-baseline.md` and gitignored `dist/**` — are therefore visible to later runner steps. `create-pull-request` sees the tracked baseline with `add-paths`; `release-action` sees the FAPs from `dist/**`. The named `flipp-ufbt` volume is fresh on each GitHub runner, and `.devcontainer/post-create.sh` chowns it before `sdk.sh --force` refreshes both indexes. Both indexes were reachable from this environment; the schedule itself only runs on the default branch (`origin/master`).
+- `ci.yml` already had `tools/dev/**` in `pull_request.paths`, so a JSON-only drift PR is gated without a path-filter change. `docs/**` was initially added for the Markdown parity row; it remains for documentation-only changes but is no longer required for drift gating.
+- Feasibility audit of the hosted handoff (source-checked, not exercised locally): `devcontainers/ci@v0.3` runs `devcontainer build/up/exec --workspace-folder <checkout>` and passes `bash -c <runCmd>` to `devcontainer exec`; the dev container CLI bind-mounts that folder into the container. Files written under the checkout — including the rewritten `tools/dev/sdk-baseline.json` and gitignored `dist/**` — are therefore visible to later steps in the same job. `create-pull-request` sees the tracked JSON with `add-paths`; `release-action` sees the FAPs from `dist/**`. The named `flipp-ufbt` volume is fresh on each GitHub runner, and `.devcontainer/post-create.sh` chowns it before `sdk.sh --force` refreshes both indexes. Both indexes were reachable from this environment; the schedule itself only runs on the default branch (`origin/master`).
+- GitHub-hosted runners provision a fresh VM for each job and decommission it when the job finishes; only steps in the same job share a filesystem. Nothing under `dist/`, `~/.ufbt/*`, the named Docker volumes, or `flipp_pomodoro/.vscode/` is preserved between runs; every run regenerates what it needs. The workflows configure no `actions/cache`, `userDataFolder`, `imageName`, `cacheFrom`, or `cacheTo`, so the dev container action does not restore runner-local state either.
+- The only cross-run state is git/GitHub state: tracked files restored by `actions/checkout`, the remote `chore/sdk-api-drift` branch used by `create-pull-request` (`delete-branch: true` lets it be recreated after merge), and remote tags read by `mathieudutour/github-tag-action`. `styfle/cancel-workflow-action` reads workflow-run history through the API. Release checkout uses `actions/checkout` defaults (`fetch-depth: 1`, no tags); the tag action v7 reads tags/history through the GitHub API and falls back to a full local checkout only if the API cannot provide history. Add `fetch-depth: 0` if that fallback must be available.
 - A PR created with the default `GITHUB_TOKEN` does produce a `pull_request` run, but GitHub starts it in an **approval-required** state. The nightly job already builds both channels, so the build gate is not lost; a maintainer must approve the PR's CI run (or the workflow must use a PAT/GitHub App token) if that check is required before merge. The repository must also allow Actions to create pull requests.
 - "Latest" means the newest entry in the `release` channel of each index. A rebuilt SDK with the same `version` and API string is not detected; tracking byte-level drift would require recording an SDK archive SHA instead of only the version/API fields.
-- `check-sdk-drift.sh` compares against the parity table in `docs/environment-baseline.md`, not against the release assets. Those assets predate the current firmware versions and APIs, so they must not be used as the "current" value.
+- `check-sdk-drift.sh` compares against the tracked JSON baseline, not against Markdown prose or release assets. Old release assets predate the current firmware versions and APIs, so they must not be used as the "current" value.
 
 ## Task 4 — Retire the firmware submodules
 
@@ -235,7 +238,7 @@ just build-all
 Acceptance:
 
 - A rebuild with an empty SDK volume reaches a passing `just verify` with no manual command beyond the rebuild.
-- Both artifacts exist, their suffixes match the deployed SDK versions, and neither API is lower than `docs/environment-baseline.md`.
+- Both artifacts exist, their suffixes match the deployed SDK versions, and neither API is lower than `baseline_api` in `tools/dev/sdk-baseline.json`.
 - `git status --short` is empty after the build (artifacts stay ignored).
 
 **Execution note:** `docker volume rm flipp-ufbt` is a host-side command; the dev container cannot remove the volume it is running from. Do not fake this step — leave it to the maintainer and report it as unverified locally.
@@ -251,7 +254,7 @@ Acceptance:
 | `.vscode/settings.json` association list and `chatgpt-helper.model` | three project settings |
 | `.vscode/tasks.json` flashing task | `just build unleashed` |
 | `release.yml` submodule build | `tools/dev/build.sh` |
-| Dependabot `gitsubmodule` entry | nightly `sdk-drift.yml` + `tools/dev/check-sdk-drift.sh` PR comparing firmware version and API (the pinned ufbt version pins only the tool) |
+| Dependabot `gitsubmodule` entry | nightly `sdk-drift.yml` + `tools/dev/check-sdk-drift.sh` PR updating `tools/dev/sdk-baseline.json` from firmware version and API (the pinned ufbt version pins only the tool) |
 | `docs/INSTALATION.md` | kept, corrected and linked from README (its original content was duplicated in release notes, not consumed by them) |
 | README virtualenv workflow | dev container workflow |
 
@@ -268,18 +271,20 @@ Observed during execution; each measure is a check to run before calling the mig
 | ufbt `CDB` wrote `flipp_pomodoro/.vscode/compile_commands.json` | ignored in `.gitignore`; do not delete it as a stray file |
 | stale submodule working trees reported API 87.1 while gitlinks were 88.2/88.26 | baseline read from gitlink commits, never from submodule `HEAD` |
 | multi-GB submodule deletion was nearly done with `rm -rf` | move to a backup first; verify both builds before committing the retirement |
-| submodule bump was the upstream firmware/API trigger | Task 3a nightly SDK drift PR tracking both version and API, with `docs/**` in `ci.yml` paths |
+| submodule bump was the upstream firmware/API trigger | Task 3a nightly SDK drift PR updating `tools/dev/sdk-baseline.json`; `tools/dev/**` in `ci.yml` paths gates it |
+| drift baseline was a Markdown table parsed with positional `awk` columns | tracked JSON read and written with `jq`; Markdown is human-only and no workflow parses it |
 | artifact names encoded the API, hiding which firmware release to install | suffix now comes from `ufbt_state.json`; docs and release notes updated together |
 | plan's literal grep criteria contradicted the tracked plan itself | interpret those greps as "no live reference outside this document" |
 | `shellcheck` is absent in the current container | add it to the Dockerfile and record that `just lint` cannot prove it until the image is rebuilt |
 | `docs/INSTALATION.md` was deleted during Task 8 | restored as the canonical install guide, corrected, and linked from README; audit every deletion for live references before committing |
 | hosted workspace/volume handoff was only assumed | source-checked `devcontainers/ci` and CLI bind mounts; `post-create.sh` chowns the fresh SDK volume; confirm on the first hosted nightly run |
+| hosted runner state was assumed to survive between runs | GitHub docs confirm a fresh VM per job; treat `dist/`, `~/.ufbt/*`, volumes, and generated editor files as per-run output and use git/GitHub state for anything cross-run |
 | drift PR CI from `GITHUB_TOKEN` needs approval | nightly job builds both channels itself; approve the PR run or use a PAT/GitHub App token if automatic checks are required |
-| same-version SDK content change would be missed | version/API fields define "latest release" here; add an SDK archive SHA to the parity table if byte-level drift must be detected |
+| same-version SDK content change would be missed | version/API fields define "latest release" here; add an SDK archive SHA to the JSON baseline if byte-level drift must be detected |
 
 ## Stop conditions
 
-- An artifact's API is lower than `docs/environment-baseline.md` after two rebuild attempts, or its firmware-version suffix does not match the deployed SDK.
+- An artifact's API is lower than `baseline_api` in `tools/dev/sdk-baseline.json` after two rebuild attempts, or its firmware-version suffix does not match the deployed SDK.
 - The Unleashed index is unreachable, or its SDK API diverges from the submodule baseline.
 - A build fails with `APPCHK` for a symbol the manifest already declares.
 - A task would delete or rewrite something outside the retire map.

@@ -13,15 +13,15 @@ The checked-out submodule working trees are stale: they sit at `8622f1a` and `7c
 
 The release columns come from the latest published release (`v2.5.15`) metadata; no artifact was downloaded. Their API suffixes differ from the current submodule commits because that release predates the latest submodule bumps.
 
-## Container parity
+## SDK baseline
 
-Artifact suffixes are the **firmware version** from the deployed SDK (`~/.ufbt/<channel>/current/ufbt_state.json`), not the API version. The API is recorded alongside it so a firmware release that changes only the API is still detected. `Delta` is the API difference from the original baseline row above.
+The machine-readable source of truth for drift detection is `tools/dev/sdk-baseline.json`. This document is human-facing background only; no workflow parses it. Each channel in that JSON records:
 
-| Channel | Firmware version | API | Delta | Artifact |
-|---|---|---|---|---|
-| standard | 1.5.1 | 88.2 | 0 | `dist/flipp_pomodoro_standard_1.5.1.fap` (32,976 bytes) |
-| unleashed | unlshd-095 | 88.26 | 0 | `dist/flipp_pomodoro_unleashed_unlshd-095.fap` (32,976 bytes) |
+- `baseline_api`: the immutable API captured from the retired gitlink above.
+- `firmware_version` and `api`: the last release/API pair observed by `tools/dev/check-sdk-drift.sh`.
+
+Artifact suffixes are the **firmware version** from the deployed SDK (`~/.ufbt/<channel>/current/ufbt_state.json`), not the API version. The API is recorded alongside it so a firmware release that changes only the API is still detected.
 
 The standard SDK is the `release` channel of `https://update.flipperzero.one/firmware/directory.json`; version 1.5.1 is the current stable release there (the development build `a8a24de3` and RC `1.5.1-rc` are deliberately excluded). The Unleashed SDK comes from `https://up.unleashedflip.com/directory.json`, version `unlshd-095`.
 
-Refreshing the Unleashed SDK with `just sdk-unleashed` and rebuilding leaves the artifact byte-for-byte unchanged (`sha256 0eb7148d2637ff760e3b1db69511dc47ef3c0020bd2a01d74ce416ec66d4d771`).
+Refreshing the Unleashed SDK with `just sdk-unleashed` and rebuilding leaves the artifact byte-for-byte unchanged (`sha256 0eb7148d2637ff760e3b1db69511dc47ef3c0020bd2a01d74ce416ec66d4d771`). Artifact sizes are intentionally not recorded in the baseline because `dist/` is regenerated on every run.

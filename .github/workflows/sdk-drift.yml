@@ -34,10 +34,10 @@ jobs:
           body: |
             A scheduled SDK refresh produced a new firmware version or API.
             The nightly job already rebuilt both channels against the new SDK.
-            Updating the recorded parity opens/updates this PR; GitHub may
-            require approval before the `pull_request` CI run starts when the
-            PR is created with `GITHUB_TOKEN`. Merging publishes fresh FAPs
+            Updating `tools/dev/sdk-baseline.json` opens/updates this PR; GitHub
+            may require approval before the `pull_request` CI run starts when
+            the PR is created with `GITHUB_TOKEN`. Merging publishes fresh FAPs
             named after the new firmware version.
-          add-paths: docs/environment-baseline.md
+          add-paths: tools/dev/sdk-baseline.json
           branch: chore/sdk-api-drift
           delete-branch: true
