@@ -27,4 +27,4 @@ description: Build, verify, and troubleshoot the Flipp Pomodoro .fap for the sta
 
 - Build both channels before producing release artifacts.
 - Never edit `dist/`; it is generated.
-- Never run `tools/build.sh`; it initialises firmware submodules and is being retired.
+- Build only through `tools/dev/build.sh`; the legacy `fbt` driver is gone.
