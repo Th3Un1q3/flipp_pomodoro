@@ -12,3 +12,9 @@ The API version comes from `targets/f7/api_symbols.csv` in the submodule commit 
 The checked-out submodule working trees are stale: they sit at `8622f1a` and `7ccce3e`, both reporting API 87.1. Their `HEAD` is not the recorded gitlink, so reading it would understate the baseline.
 
 The release columns come from the latest published release (`v2.5.15`) metadata; no artifact was downloaded. Their API suffixes differ from the current submodule commits because that release predates the latest submodule bumps.
+
+## Container parity
+
+| Channel | Baseline API | ufbt API | Delta | Artifact |
+|---|---|---|---|---|
+| standard | 88.2 | 88.2 | 0 | `dist/flipp_pomodoro_standard_88.2.fap` (32,976 bytes) |
