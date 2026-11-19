@@ -36,13 +36,16 @@ Updating the Unleashed directory without `--index-url` replaces it with the offi
 
 ## API change detection
 
-Firmware APIs are no longer tracked with git submodules. A nightly `.github/workflows/sdk-drift.yml` run refreshes both SDKs, rebuilds both channels inside the dev container, and compares the deployed firmware versions and APIs with the tracked JSON baseline in `tools/dev/sdk-baseline.json`. On a change it opens a pull request that updates that JSON; `ci.yml` gates the PR, and merging it runs `release.yml`. The release rebuilds both channels and re-checks the baseline with `tools/dev/check-sdk-drift.sh --check-only`, so it cannot publish FAPs built against an unrecorded SDK. `docs/environment-baseline.md` is background for humans and is not parsed by automation. This preserves the old Dependabot submodule-bump trigger without keeping multi-gigabyte firmware trees in the repository.
+Firmware APIs are no longer tracked with git submodules. `.github/workflows/sdk-drift.yml` runs nightly and can also be started manually with **Actions → SDK drift → Run workflow**. It refreshes both SDKs, rebuilds both channels inside the dev container, and compares the deployed firmware versions and APIs with the tracked JSON baseline in `tools/dev/sdk-baseline.json`. On a change it opens a pull request that updates that JSON; `ci.yml` gates the PR, and merging it runs `release.yml`. The release rebuilds both channels and re-checks the baseline with `tools/dev/check-sdk-drift.sh --check-only`, so it cannot publish FAPs built against an unrecorded SDK.
+
+A no-drift run exits successfully, creates no pull request, and writes a **No SDK drift detected** job summary; it does not fail. A tool or SDK failure fails the job. `tools/dev/test-sdk-drift.sh` (or `just drift-test`) exercises no-drift, drift, check-only, and schema-failure paths with synthetic SDK state. `docs/environment-baseline.md` is background for humans and is not parsed by automation. This preserves the old Dependabot submodule-bump trigger without keeping multi-gigabyte firmware trees in the repository.
 
 ## Commands
 
 | Command | Result |
 |---|---|
-| `just verify` | tool, SDK, and clean-build gate |
+| `just verify` | tool, SDK, drift-check, and clean-build gate |
+| `just drift-test` | synthetic drift-detection checks |
 | `just build` | standard FAP in `dist/` |
 | `just build unleashed` | Unleashed FAP in `dist/` |
 | `just build-all` | both channels |

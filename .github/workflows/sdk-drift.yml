@@ -28,6 +28,25 @@ jobs:
             bash tools/dev/build.sh unleashed
             bash tools/dev/check-sdk-drift.sh
 
+      - name: Report SDK drift result
+        if: success()
+        run: |
+          if [[ -s dist/sdk-drift ]]; then
+            {
+              echo "## SDK drift detected"
+              echo
+              echo '```text'
+              cat dist/sdk-drift
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "## No SDK drift detected"
+              echo
+              echo "The baseline in tools/dev/sdk-baseline.json is unchanged."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Open a PR when the API moved
         uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
         with:

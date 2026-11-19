@@ -7,8 +7,11 @@ set -euo pipefail
 # old submodule bump that Dependabot used to open for every firmware release.
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-baseline="$repo_root/tools/dev/sdk-baseline.json"
-marker="$repo_root/dist/sdk-drift"
+# Environment overrides let the test suite exercise this script with synthetic
+# SDK state without touching the real baseline or build output.
+baseline="${FLIPP_POMODORO_BASELINE:-$repo_root/tools/dev/sdk-baseline.json}"
+dist_dir="${FLIPP_POMODORO_DIST:-$repo_root/dist}"
+marker="$dist_dir/sdk-drift"
 
 api_re='^[0-9]+([.][0-9]+)?$'
 version_re='^[A-Za-z0-9._-]+$'
@@ -16,6 +19,10 @@ version_re='^[A-Za-z0-9._-]+$'
 fail() {
     echo "$*" >&2
     exit 1
+}
+
+report() {
+    echo "$*"
 }
 
 check_only=0
@@ -46,7 +53,7 @@ for channel in standard unleashed; do
 
     # The build script names the artifact after the firmware version, so the
     # file name is a second check that the build used the refreshed SDK.
-    fap="$(ls -1t "$repo_root"/dist/"flipp_pomodoro_${channel}_"*.fap 2>/dev/null | head -n1)"
+    fap="$(ls -1t "$dist_dir"/"flipp_pomodoro_${channel}_"*.fap 2>/dev/null | head -n1)"
     [[ -n "$fap" ]] || fail "missing $channel artifact; cannot check SDK drift"
     built_version="$(basename "$fap" | sed -E "s/^flipp_pomodoro_${channel}_(.*)\.fap$/\1/")"
     [[ "$built_version" == "$version" ]] || fail "$channel artifact is named '$built_version' but SDK is '$version'"
@@ -64,6 +71,7 @@ for channel in standard unleashed; do
     [[ "$current_version" =~ $version_re ]] || fail "unexpected recorded version for $channel: '$current_version'"
 
     if [[ "$version" == "$current_version" && "$api" == "$current_api" ]]; then
+        report "$channel: no drift ($version / API $api)"
         continue
     fi
 
@@ -71,6 +79,7 @@ for channel in standard unleashed; do
         fail "$channel drift: $current_version/$current_api -> $version/$api; update tools/dev/sdk-baseline.json first"
     fi
 
+    report "$channel: drift $current_version/$current_api -> $version/$api"
     delta="$(awk -v a="$api" -v b="$baseline_api" 'BEGIN { printf "%.2f", a - b }')"
     tmp="$(mktemp "${baseline}.XXXXXX")"
     trap 'rm -f "$tmp"' EXIT

@@ -105,7 +105,7 @@ Acceptance:
 
 The original plan missed this. The submodule bumps were the trigger for rebuilds; deleting them without a replacement means a new firmware API is only noticed when a human happens to push app code. Add `.github/workflows/sdk-drift.yml`:
 
-- `schedule` (nightly) plus `workflow_dispatch`; no parallel toolchain — use `devcontainers/ci@v0.3`.
+- `schedule` (nightly at 04:00 UTC) plus `workflow_dispatch` so the check can be verified on demand; no parallel toolchain — use the pinned `devcontainers/ci` action.
 - `runCmd` refreshes both SDKs through `tools/dev/sdk.sh --force`, rebuilds both channels, then runs `tools/dev/check-sdk-drift.sh`.
 - `check-sdk-drift.sh` compares the deployed firmware version and SDK API (`api_symbols.csv`) with `tools/dev/sdk-baseline.json`; on drift it rewrites only that JSON file. The fresh artifact name is cross-checked against the SDK version, but artifact size is not baseline data.
 - `peter-evans/create-pull-request` opens a PR for the changed JSON baseline; the drift job itself already builds both channels. After the `pull_request` run is allowed, `ci.yml` gates the PR, and merging it runs `release.yml`.
@@ -113,8 +113,9 @@ The original plan missed this. The submodule bumps were the trigger for rebuilds
 
 Acceptance:
 
-- A nightly run with no firmware-version or API change leaves the working tree clean.
+- A nightly or manually dispatched run with no firmware-version or API change leaves the working tree clean, exits 0, writes a **No SDK drift detected** job summary, and creates no PR.
 - A simulated change to either field updates the JSON baseline and opens a PR; no release is created until the PR is merged.
+- `tools/dev/test-sdk-drift.sh` covers no-drift, drift, check-only, and bad-schema paths with synthetic SDK state and no network access.
 - A release with a stale baseline fails before tagging; a release after the drift PR merge passes.
 - The drift workflow uses only the dev container action and the same build/SDK scripts as local builds.
 
@@ -274,6 +275,7 @@ Observed during execution; each measure is a check to run before calling the mig
 | SonarCloud flagged mutable action tags as high-severity security alerts | every external action is pinned to a full 40-character commit SHA with a version comment; grep for `uses: .*@(v[0-9]|[0-9]+\.[0-9]+)` in `.github/workflows/` must be empty |
 | SonarCloud flagged consecutive `RUN` instructions in `.devcontainer/Dockerfile` | combine adjacent install steps into one `RUN` chain; keep explanatory comments above the combined instruction |
 | a dev-container job hung and burned CI minutes | job timeouts (30/30/45 min) plus dev-container step timeouts (25/25/40 min) in `ci.yml`, `release.yml`, and `sdk-drift.yml` |
+| no-drift SDK check was silent and hard to verify | explicit **No SDK drift detected** job summary, `workflow_dispatch` trigger, and `tools/dev/test-sdk-drift.sh` covering all outcomes |
 | ufbt `CDB` wrote `flipp_pomodoro/.vscode/compile_commands.json` | ignored in `.gitignore`; do not delete it as a stray file |
 | stale submodule working trees reported API 87.1 while gitlinks were 88.2/88.26 | baseline read from gitlink commits, never from submodule `HEAD` |
 | multi-GB submodule deletion was nearly done with `rm -rf` | move to a backup first; verify both builds before committing the retirement |

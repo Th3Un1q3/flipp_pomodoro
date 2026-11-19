@@ -21,6 +21,10 @@ verify:
 lint:
     shellcheck tools/dev/*.sh .devcontainer/*.sh
 
+# Exercise SDK drift detection with synthetic SDK state.
+drift-test:
+    bash tools/dev/test-sdk-drift.sh
+
 # Delete generated build output.
 clean:
     rm -rf dist flipp_pomodoro/dist

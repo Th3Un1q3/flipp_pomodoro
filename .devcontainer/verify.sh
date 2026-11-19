@@ -13,6 +13,9 @@ opencode --version
 just --version
 printf 'ufbt: %s\n' "$(pipx list --short 2>/dev/null | awk '$1 == "ufbt" {print $2}')"
 
+echo "== sdk drift check =="
+bash "$repo_root/tools/dev/test-sdk-drift.sh"
+
 echo "== build: $channel =="
 bash tools/dev/build.sh "$channel"
 
