@@ -20,7 +20,7 @@ Flipper Zero application (FAP) written in C against the furi and gui APIs. The b
 
 | Command | Result |
 |---|---|
-| `just build` | standard-firmware FAP in `dist/flipp_pomodoro_standard_<api>.fap` |
+| `just build` | standard-firmware FAP in `dist/flipp_pomodoro_standard_<firmware_version>.fap` |
 | `just build unleashed` | Unleashed FAP |
 | `just build-all` | both channels |
 | `just verify` | tool, SDK, and clean-build gate |

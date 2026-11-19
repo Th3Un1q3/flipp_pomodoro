@@ -54,4 +54,4 @@ The agent loads `AGENTS.md` for repository rules and `.agents/skills/flipper-fap
 ## Limits
 
 - The container builds; it does not flash. `ufbt flash` and `ufbt launch` need `/dev/ttyACM*` from the host, which a Dev Container does not receive by default.
-- The Unleashed SDK is a third-party index, so its API can lag official firmware. The build prints the API version it linked against, and the nightly drift workflow records any change.
+- The Unleashed SDK is a third-party index, so its API can lag official firmware. Artifacts are named after the deployed firmware version, the build prints both version and API, and the nightly drift workflow records either kind of change.

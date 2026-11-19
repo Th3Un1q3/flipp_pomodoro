@@ -15,9 +15,13 @@ The release columns come from the latest published release (`v2.5.15`) metadata;
 
 ## Container parity
 
-| Channel | Baseline API | ufbt API | Delta | Artifact |
+Artifact suffixes are the **firmware version** from the deployed SDK (`~/.ufbt/<channel>/current/ufbt_state.json`), not the API version. The API is recorded alongside it so a firmware release that changes only the API is still detected. `Delta` is the API difference from the original baseline row above.
+
+| Channel | Firmware version | API | Delta | Artifact |
 |---|---|---|---|---|
-| standard | 88.2 | 88.2 | 0 | `dist/flipp_pomodoro_standard_88.2.fap` (32,976 bytes) |
-| unleashed | 88.26 | 88.26 | 0 | `dist/flipp_pomodoro_unleashed_88.26.fap` (32,976 bytes) |
+| standard | 1.5.1 | 88.2 | 0 | `dist/flipp_pomodoro_standard_1.5.1.fap` (32,976 bytes) |
+| unleashed | unlshd-095 | 88.26 | 0 | `dist/flipp_pomodoro_unleashed_unlshd-095.fap` (32,976 bytes) |
+
+The standard SDK is the `release` channel of `https://update.flipperzero.one/firmware/directory.json`; version 1.5.1 is the current stable release there (the development build `a8a24de3` and RC `1.5.1-rc` are deliberately excluded). The Unleashed SDK comes from `https://up.unleashedflip.com/directory.json`, version `unlshd-095`.
 
 Refreshing the Unleashed SDK with `just sdk-unleashed` and rebuilding leaves the artifact byte-for-byte unchanged (`sha256 0eb7148d2637ff760e3b1db69511dc47ef3c0020bd2a01d74ce416ec66d4d771`).

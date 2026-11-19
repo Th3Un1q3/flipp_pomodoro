@@ -8,8 +8,8 @@ description: Build, verify, and troubleshoot the Flipp Pomodoro .fap for the sta
 ## Workflow
 
 1. Pick the channel: `standard` for official firmware, `unleashed` for DarkFlippers. A change that touches platform APIs builds for both.
-2. Run `bash tools/dev/build.sh <channel>`. It selects `~/.ufbt/<channel>`, calls `tools/dev/sdk.sh` to bootstrap the SDK when absent, builds, and copies the result to `dist/flipp_pomodoro_<channel>_<api>.fap`.
-3. Read the `Target: 7, API: <version>` line from the output. Record the API when the artifact is for release.
+2. Run `bash tools/dev/build.sh <channel>`. It selects `~/.ufbt/<channel>`, calls `tools/dev/sdk.sh` to bootstrap the SDK when absent, builds, and copies the result to `dist/flipp_pomodoro_<channel>_<firmware_version>.fap`, where the suffix comes from the deployed SDK's `ufbt_state.json`.
+3. Read the `Target: 7, API: <version>` line from the output and the firmware version printed by the script. Record both when the artifact is for release.
 4. Confirm the artifact exists and is non-empty with `stat -c %s`. A missing or zero-byte file is a failed build even when ufbt exits 0.
 5. Leave flashing to a host with the device attached.
 

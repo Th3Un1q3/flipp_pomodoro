@@ -119,7 +119,7 @@ just build-all         # both channels
 just verify            # tool/SDK check plus a clean standard build
 ```
 
-Each build writes `dist/flipp_pomodoro_<channel>_<api>.fap`.
+Each build writes `dist/flipp_pomodoro_<channel>_<firmware_version>.fap` (for example `flipp_pomodoro_standard_1.5.1.fap`). The build log still prints the firmware API it linked against.
 
 To try the app on real hardware, use a host with the device attached:
 - Connect your Flipper Zero over USB and make sure no other process is using the serial port.

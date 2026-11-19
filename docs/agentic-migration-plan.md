@@ -13,7 +13,7 @@ This plan runs inside the dev container that `docs/agentic-environment.md` descr
 | Dependency bot | `.github/dependabot.yml` | `gitsubmodule` ecosystem tracks the two firmware trees |
 | Host build docs | `README.md` "Developer Environment", `docs/INSTALATION.md` | Manual virtualenv instructions, a duplicated and misspelled install page |
 
-The container build path already exists: `tools/dev/build.sh` drives ufbt and produces `dist/flipp_pomodoro_<channel>_<api>.fap`.
+The container build path already exists: `tools/dev/build.sh` drives ufbt and produces `dist/flipp_pomodoro_<channel>_<firmware_version>.fap`, with the suffix taken from the deployed SDK's `ufbt_state.json`.
 
 **Motivation that must survive the retirement:** the `gitsubmodule` watcher was not housekeeping. A daily Dependabot bump of either gitlink opened a PR; that PR ran CI, and merging it to `master` ran the release workflow against the newly published firmware API. The replacement must keep the loop *upstream API change → PR → build → release*. Removing the submodules without replacing that trigger silently loses functionality.
 
@@ -59,8 +59,8 @@ just build standard
 
 Acceptance:
 
-- `dist/flipp_pomodoro_standard_<api>.fap` exists and is larger than 1 KB.
-- `<api>` is equal to or newer than the standard row in `docs/environment-baseline.md`; record the delta. A lower API is a stop condition.
+- `dist/flipp_pomodoro_standard_<firmware_version>.fap` exists and is larger than 1 KB.
+- `<firmware_version>` matches the deployed standard SDK, and the API printed by ufbt is equal to or newer than the standard row in `docs/environment-baseline.md`; record the delta. A lower API is a stop condition.
 
 ## Task 2 — Unleashed-channel parity
 
@@ -71,8 +71,8 @@ just build unleashed
 
 Acceptance:
 
-- `dist/flipp_pomodoro_unleashed_<api>.fap` exists and is larger than 1 KB.
-- `<api>` is equal to or newer than the unleashed row in `docs/environment-baseline.md`; record the delta. A lower API is a stop condition.
+- `dist/flipp_pomodoro_unleashed_<firmware_version>.fap` exists and is larger than 1 KB.
+- `<firmware_version>` matches the deployed Unleashed SDK, and the API printed by ufbt is equal to or newer than the unleashed row in `docs/environment-baseline.md`; record the delta. A lower API is a stop condition.
 - `UFBT_HOME=~/.ufbt/unleashed ufbt update --index-url=https://up.unleashedflip.com/directory.json --channel=release` leaves the artifact unchanged on a rebuild.
 
 ## Task 3 — Guard retirement with CI
@@ -106,19 +106,21 @@ The original plan missed this. The submodule bumps were the trigger for rebuilds
 
 - `schedule` (nightly) plus `workflow_dispatch`; no parallel toolchain — use `devcontainers/ci@v0.3`.
 - `runCmd` refreshes both SDKs through `tools/dev/sdk.sh --force`, rebuilds both channels, then runs `tools/dev/check-sdk-drift.sh`.
-- `check-sdk-drift.sh` compares the `API:` encoded in the fresh artifacts with the parity table in `docs/environment-baseline.md`; on drift it rewrites that row.
+- `check-sdk-drift.sh` compares both the firmware version encoded in the fresh artifact name and the SDK API (`api_symbols.csv`) with the parity table in `docs/environment-baseline.md`; on drift it rewrites that row.
 - `peter-evans/create-pull-request` opens a PR for the changed parity row; that PR runs `ci.yml`, and merging it runs `release.yml`.
 
 Acceptance:
 
-- A nightly run with no API change leaves the working tree clean.
-- A simulated API change updates the parity row and opens a PR; no release is created until the PR is merged.
+- A nightly run with no firmware-version or API change leaves the working tree clean.
+- A simulated change to either field updates the parity row and opens a PR; no release is created until the PR is merged.
 - The drift workflow uses only the dev container action and the same build/SDK scripts as local builds.
+
+**Execution note:** artifact suffixes were changed from the API to the firmware version so the file name identifies the firmware release a user should install. `build.sh` reads `.version` from `ufbt_state.json`, sanitizes it, and still fails the build if ufbt prints no API line. `check-sdk-drift.sh` reads the SDK version and API directly, verifies the artifact name matches the version, and rewrites the parity row when either changes. Release notes and the install guide were updated to the new naming; old API-suffixed release assets remain valid historical files.
 
 **Execution notes / prevention:**
 - `ci.yml` had to gain `docs/**` in `pull_request.paths`. Without it, a drift PR that only edits the parity table would not run CI, so merging it would not exercise the build gate.
 - Both the drift PR and the release step rely on `devcontainers/ci@v0.3` mounting the workspace back to the runner so `create-pull-request` sees the rewritten table and `ncipollo/release-action` sees `dist/**`. That behaviour cannot be exercised locally; it is documented here rather than claimed as verified.
-- `check-sdk-drift.sh` compares against the parity table in `docs/environment-baseline.md`, not against the release assets. Those assets predate the current APIs, so they must not be used as the "current" value.
+- `check-sdk-drift.sh` compares against the parity table in `docs/environment-baseline.md`, not against the release assets. Those assets predate the current firmware versions and APIs, so they must not be used as the "current" value.
 
 ## Task 4 — Retire the firmware submodules
 
@@ -138,7 +140,7 @@ Acceptance:
 - `git ls-files -s | awk '$1 == "160000"'` prints nothing.
 - `test ! -e .gitmodules` succeeds.
 - `just verify` exits 0 with no submodule present.
-- `just build-all` still produces both artifacts with the Task 1 and Task 2 APIs.
+- `just build-all` still produces both artifacts with the Task 1 and Task 2 firmware versions and APIs.
 
 ## Task 5 — Retire `tools/build.sh`
 
@@ -231,7 +233,7 @@ just build-all
 Acceptance:
 
 - A rebuild with an empty SDK volume reaches a passing `just verify` with no manual command beyond the rebuild.
-- Both artifacts exist; neither API is lower than `docs/environment-baseline.md`.
+- Both artifacts exist, their suffixes match the deployed SDK versions, and neither API is lower than `docs/environment-baseline.md`.
 - `git status --short` is empty after the build (artifacts stay ignored).
 
 **Execution note:** `docker volume rm flipp-ufbt` is a host-side command; the dev container cannot remove the volume it is running from. Do not fake this step — leave it to the maintainer and report it as unverified locally.
@@ -247,7 +249,7 @@ Acceptance:
 | `.vscode/settings.json` association list and `chatgpt-helper.model` | three project settings |
 | `.vscode/tasks.json` flashing task | `just build unleashed` |
 | `release.yml` submodule build | `tools/dev/build.sh` |
-| Dependabot `gitsubmodule` entry | nightly `sdk-drift.yml` + `tools/dev/check-sdk-drift.sh` PR (the pinned ufbt version only pin the tool, not the firmware API) |
+| Dependabot `gitsubmodule` entry | nightly `sdk-drift.yml` + `tools/dev/check-sdk-drift.sh` PR comparing firmware version and API (the pinned ufbt version pins only the tool) |
 | `docs/INSTALATION.md` | kept, corrected and linked from README (its original content was duplicated in release notes, not consumed by them) |
 | README virtualenv workflow | dev container workflow |
 
@@ -264,14 +266,15 @@ Observed during execution; each measure is a check to run before calling the mig
 | ufbt `CDB` wrote `flipp_pomodoro/.vscode/compile_commands.json` | ignored in `.gitignore`; do not delete it as a stray file |
 | stale submodule working trees reported API 87.1 while gitlinks were 88.2/88.26 | baseline read from gitlink commits, never from submodule `HEAD` |
 | multi-GB submodule deletion was nearly done with `rm -rf` | move to a backup first; verify both builds before committing the retirement |
-| submodule bump was the upstream-API trigger | Task 3a nightly SDK drift PR, with `docs/**` in `ci.yml` paths |
+| submodule bump was the upstream firmware/API trigger | Task 3a nightly SDK drift PR tracking both version and API, with `docs/**` in `ci.yml` paths |
+| artifact names encoded the API, hiding which firmware release to install | suffix now comes from `ufbt_state.json`; docs and release notes updated together |
 | plan's literal grep criteria contradicted the tracked plan itself | interpret those greps as "no live reference outside this document" |
 | `shellcheck` is absent in the current container | add it to the Dockerfile and record that `just lint` cannot prove it until the image is rebuilt |
 | `docs/INSTALATION.md` was deleted during Task 8 | restored as the canonical install guide, corrected, and linked from README; audit every deletion for live references before committing |
 
 ## Stop conditions
 
-- An artifact API is lower than `docs/environment-baseline.md` after two rebuild attempts.
+- An artifact's API is lower than `docs/environment-baseline.md` after two rebuild attempts, or its firmware-version suffix does not match the deployed SDK.
 - The Unleashed index is unreachable, or its SDK API diverges from the submodule baseline.
 - A build fails with `APPCHK` for a symbol the manifest already declares.
 - A task would delete or rewrite something outside the retire map.
@@ -286,5 +289,5 @@ On a stop condition: revert the current task's commit, record the observed outpu
 - [ ] `release.yml` builds through `tools/dev/build.sh`; `ci.yml` proves the container gate on pull requests.
 - [ ] `.vscode` contains no macOS path, no submodule path, and no hardware task.
 - [ ] `just lint` and `just verify` exit 0 on a clean rebuild.
-- [ ] `just build-all` reproduces both baseline APIs.
+- [ ] `just build-all` reproduces both baseline firmware versions and APIs.
 - [ ] Documentation describes the container path only, with the host fallback confined to a short section.

@@ -29,11 +29,12 @@ jobs:
       - name: Open a PR when the API moved
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: 'docs: record new firmware API versions'
-          title: 'chore: firmware API drift'
+          commit-message: 'docs: record new firmware versions and APIs'
+          title: 'chore: firmware SDK drift'
           body: |
-            A scheduled SDK refresh produced a new firmware API. Updating the
-            recorded parity runs CI on this PR; merging it publishes fresh FAPs.
+            A scheduled SDK refresh produced a new firmware version or API.
+            Updating the recorded parity runs CI on this PR; merging it
+            publishes fresh FAPs named after the new firmware version.
           add-paths: docs/environment-baseline.md
           branch: chore/sdk-api-drift
           delete-branch: true
