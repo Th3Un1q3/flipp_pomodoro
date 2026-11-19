@@ -107,7 +107,7 @@ The original plan missed this. The submodule bumps were the trigger for rebuilds
 - `schedule` (nightly) plus `workflow_dispatch`; no parallel toolchain — use `devcontainers/ci@v0.3`.
 - `runCmd` refreshes both SDKs through `tools/dev/sdk.sh --force`, rebuilds both channels, then runs `tools/dev/check-sdk-drift.sh`.
 - `check-sdk-drift.sh` compares both the firmware version encoded in the fresh artifact name and the SDK API (`api_symbols.csv`) with the parity table in `docs/environment-baseline.md`; on drift it rewrites that row.
-- `peter-evans/create-pull-request` opens a PR for the changed parity row; that PR runs `ci.yml`, and merging it runs `release.yml`.
+- `peter-evans/create-pull-request` opens a PR for the changed parity row; the drift job itself already builds both channels. After the `pull_request` run is allowed, `ci.yml` gates the PR, and merging it runs `release.yml`.
 
 Acceptance:
 
@@ -119,7 +119,9 @@ Acceptance:
 
 **Execution notes / prevention:**
 - `ci.yml` had to gain `docs/**` in `pull_request.paths`. Without it, a drift PR that only edits the parity table would not run CI, so merging it would not exercise the build gate.
-- Both the drift PR and the release step rely on `devcontainers/ci@v0.3` mounting the workspace back to the runner so `create-pull-request` sees the rewritten table and `ncipollo/release-action` sees `dist/**`. That behaviour cannot be exercised locally; it is documented here rather than claimed as verified.
+- Feasibility audit of the hosted handoff (source-checked, not exercised locally): `devcontainers/ci@v0.3` runs `devcontainer up/exec --workspace-folder <checkout>`, and the dev container CLI bind-mounts that folder into the container. Files written under the checkout — including the rewritten `docs/environment-baseline.md` and gitignored `dist/**` — are therefore visible to later runner steps. `create-pull-request` sees the tracked baseline with `add-paths`; `release-action` sees the FAPs from `dist/**`. The named `flipp-ufbt` volume is fresh on each GitHub runner, and `.devcontainer/post-create.sh` chowns it before `sdk.sh --force` refreshes both indexes. Both indexes were reachable from this environment; the schedule itself only runs on the default branch (`origin/master`).
+- A PR created with the default `GITHUB_TOKEN` does produce a `pull_request` run, but GitHub starts it in an **approval-required** state. The nightly job already builds both channels, so the build gate is not lost; a maintainer must approve the PR's CI run (or the workflow must use a PAT/GitHub App token) if that check is required before merge. The repository must also allow Actions to create pull requests.
+- "Latest" means the newest entry in the `release` channel of each index. A rebuilt SDK with the same `version` and API string is not detected; tracking byte-level drift would require recording an SDK archive SHA instead of only the version/API fields.
 - `check-sdk-drift.sh` compares against the parity table in `docs/environment-baseline.md`, not against the release assets. Those assets predate the current firmware versions and APIs, so they must not be used as the "current" value.
 
 ## Task 4 — Retire the firmware submodules
@@ -271,6 +273,9 @@ Observed during execution; each measure is a check to run before calling the mig
 | plan's literal grep criteria contradicted the tracked plan itself | interpret those greps as "no live reference outside this document" |
 | `shellcheck` is absent in the current container | add it to the Dockerfile and record that `just lint` cannot prove it until the image is rebuilt |
 | `docs/INSTALATION.md` was deleted during Task 8 | restored as the canonical install guide, corrected, and linked from README; audit every deletion for live references before committing |
+| hosted workspace/volume handoff was only assumed | source-checked `devcontainers/ci` and CLI bind mounts; `post-create.sh` chowns the fresh SDK volume; confirm on the first hosted nightly run |
+| drift PR CI from `GITHUB_TOKEN` needs approval | nightly job builds both channels itself; approve the PR run or use a PAT/GitHub App token if automatic checks are required |
+| same-version SDK content change would be missed | version/API fields define "latest release" here; add an SDK archive SHA to the parity table if byte-level drift must be detected |
 
 ## Stop conditions
 
