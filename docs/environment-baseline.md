@@ -18,3 +18,6 @@ The release columns come from the latest published release (`v2.5.15`) metadata;
 | Channel | Baseline API | ufbt API | Delta | Artifact |
 |---|---|---|---|---|
 | standard | 88.2 | 88.2 | 0 | `dist/flipp_pomodoro_standard_88.2.fap` (32,976 bytes) |
+| unleashed | 88.26 | 88.26 | 0 | `dist/flipp_pomodoro_unleashed_88.26.fap` (32,976 bytes) |
+
+Refreshing the Unleashed SDK with `just sdk-unleashed` and rebuilding leaves the artifact byte-for-byte unchanged (`sha256 0eb7148d2637ff760e3b1db69511dc47ef3c0020bd2a01d74ce416ec66d4d771`).
