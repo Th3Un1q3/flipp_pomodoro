@@ -25,12 +25,11 @@ USER vscode
 
 # ufbt downloads its own Python and arm-none-eabi toolchain on first use, so the
 # distro Python only has to satisfy the bootstrap (3.8 or newer).
-RUN pipx install "ufbt==${UFBT_VERSION}"
-
-# The installer writes the binary to ~/.opencode/bin and leaves PATH alone;
-# devcontainer.json adds that directory. An empty OPENCODE_VERSION installs the
-# current release.
-RUN if [ -n "${OPENCODE_VERSION}" ]; then \
+# The OpenCode installer writes the binary to ~/.opencode/bin and leaves PATH
+# alone; devcontainer.json adds that directory. An empty OPENCODE_VERSION
+# installs the current release.
+RUN pipx install "ufbt==${UFBT_VERSION}" \
+    && if [ -n "${OPENCODE_VERSION}" ]; then \
         curl -fsSL https://opencode.ai/v2/install | VERSION="${OPENCODE_VERSION}" bash; \
     else \
         curl -fsSL https://opencode.ai/v2/install | bash; \
