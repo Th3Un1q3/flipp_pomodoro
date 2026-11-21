@@ -8,7 +8,8 @@ on:
       - 'tools/dev/**'
       - 'docs/**'
       - 'justfile'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/**'
+      - '.github/dependabot.yml'
 
 jobs:
   build:

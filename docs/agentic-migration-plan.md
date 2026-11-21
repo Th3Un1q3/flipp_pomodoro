@@ -276,6 +276,7 @@ Observed during execution; each measure is a check to run before calling the mig
 | SonarCloud flagged consecutive `RUN` instructions in `.devcontainer/Dockerfile` | combine adjacent install steps into one `RUN` chain; keep explanatory comments above the combined instruction |
 | a dev-container job hung and burned CI minutes | job timeouts (30/30/45 min) plus dev-container step timeouts (25/25/40 min) in `ci.yml`, `release.yml`, and `sdk-drift.yml` |
 | no-drift SDK check was silent and hard to verify | explicit **No SDK drift detected** job summary, `workflow_dispatch` trigger, and `tools/dev/test-sdk-drift.sh` covering all outcomes |
+| Dependabot updates to `release.yml` or `sdk-drift.yml` would not have run CI because `ci.yml` named only itself | `ci.yml` path filter now includes `.github/workflows/**` and `.github/dependabot.yml`; dependency updates run weekly, use `chore(deps)` prefixes to avoid SemVer tags, and group all action bumps into one PR |
 | ufbt `CDB` wrote `flipp_pomodoro/.vscode/compile_commands.json` | ignored in `.gitignore`; do not delete it as a stray file |
 | stale submodule working trees reported API 87.1 while gitlinks were 88.2/88.26 | baseline read from gitlink commits, never from submodule `HEAD` |
 | multi-GB submodule deletion was nearly done with `rm -rf` | move to a backup first; verify both builds before committing the retirement |

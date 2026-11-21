@@ -1,6 +1,31 @@
 version: 2
 updates:
+  # Keep the SHA-pinned workflow actions current. Dependabot also updates the
+  # same-line version comments.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # Update public Dev Container Features and the tracked lockfile together.
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Update the base image in .devcontainer/Dockerfile. Packages installed in
+  # RUN come from that image and are not separately trackable by Dependabot.
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
